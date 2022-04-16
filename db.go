@@ -100,6 +100,37 @@ func displayMarks(marks []*Marks) {
 	fmt.Println()
 }
 
+type ppdbSchool struct {
+	Type  string `bson:"type,omitempty"`
+	Level string `bson:"level,omitempty"`
+	code  int    `bson:"code,omitempty"`
+}
+
+type PpdbOption struct {
+	Id               primitive.ObjectID `bson:"_id,omitempty"`
+	Name             string             `bson:"name,omitempty"`
+	Type             string             `bson:"type,omitempty"`
+	Quota            int                `bson:"quota,omitempty"`
+	QuotaOld         int                `bson:"quota_old,omitempty"`
+	TotalQuota       int                `bson:"total_quota,omitempty"`
+	SchoolId         primitive.ObjectID `bson:"school,omitempty"`
+	PpdbSchool       ppdbSchool         `bson:"ppdb_schools,omitempty"`
+	ppdbRegistration []PpdbRegistration
+}
+
+type PpdbRegistration struct {
+	Id                 primitive.ObjectID `bson:"_id,omitempty"`
+	Name               string             `bson:"name,omitempty"`
+	FirstChoiceOption  primitive.ObjectID `bson:"first_choice_option,omitempty"`
+	SecondChoiceOption primitive.ObjectID `bson:"second_choice_option,omitempty"`
+	ThirdChoiceOption  primitive.ObjectID `bson:"third_choice_option,omitempty"`
+	Score              float32            `bson:"score,omitempty"`
+}
+
+func (ppdbOption PpdbOption) addItem(options []PpdbOption) []PpdbOption {
+	return append(options, ppdbOption)
+}
+
 /*
 	db.ppdb_options.aggregate([
 		{ "$match" :
@@ -129,22 +160,19 @@ func displayMarks(marks []*Marks) {
 	]);
 */
 
-type ppdbOption struct {
-	Id   primitive.ObjectID `bson:"_id,omitempty"`
-	Name string             `bson:"name,omitempty"`
-}
-
-func getSchoolAndOption(ctx context.Context, registrationsCollection *mongo.Collection) []ppdbOption {
+func getSchoolAndOption(ctx context.Context, database *mongo.Database) []PpdbOption {
 
 	//var obj1, _ = primitive.ObjectIDFromHex("608f879478c5383cc367ce62")
-	objectId, err := primitive.ObjectIDFromHex("608f879478c5383cc367ce62")
+
+	registrationsCollection := database.Collection("ppdb_options")
+
+	objectId, err := primitive.ObjectIDFromHex("608f866978c5383cc367c75f")
 	if err != nil {
 		log.Println("Invalid id")
 	}
 
-	var optionsType = [2]string{"abk", "ketm"}
+	var optionsType = [2]string{"rapor"}
 	var schoolIds = [1]primitive.ObjectID{objectId}
-
 	matchStage := bson.D{{"$match", bson.M{
 		"type": bson.M{"$in": optionsType},
 		"$and": []bson.M{bson.M{
@@ -157,7 +185,6 @@ func getSchoolAndOption(ctx context.Context, registrationsCollection *mongo.Coll
 	pipeline := []bson.M{
 		bson.M{"$match": bson.M{"$expr": bson.M{"$eq": []string{"$_id", "$$school"}}}},
 	}
-
 	lookupStage := bson.D{{"$lookup", bson.D{{"from", "ppdb_schools"},
 		{"let", bson.D{{"school", "$school"}}},
 		{"pipeline", pipeline},
@@ -165,20 +192,80 @@ func getSchoolAndOption(ctx context.Context, registrationsCollection *mongo.Coll
 	unwindStage := bson.D{{"$unwind", "$ppdb_schools"}}
 	sortByName := bson.D{{"$sort", bson.D{{"name", 1}}}}
 	sortByType := bson.D{{"$sort", bson.D{{"type", 1}}}}
-	fields := bson.D{{"$project", bson.D{{"name", 1}}}}
+	//fields := bson.D{{"$project", bson.D{{"name", 1}}}}
 
 	showInfoCursor, err := registrationsCollection.Aggregate(ctx, mongo.Pipeline{
-		matchStage, lookupStage, unwindStage, sortByName, sortByType, fields,
+		matchStage, lookupStage, unwindStage, sortByName, sortByType,
 	})
+	/*pipeline := make([]bson.M, 0)
+	err = bson.UnmarshalExtJSON([]byte(strings.TrimSpace(`
+	    [
+			{ "$match" :
+				{
+					"type" :
+						{ "$in" : ["ketm"]},
+						"$and" : [{
+							"school" : {
+								"$in" : schoolIds
+								}
+						}]
+					}
+			},
+					{
+						"$lookup" :
+						{
+							"from" : "ppdb_schools",
+							"let" : { "school" : "$school"},
+							"pipeline" : [{ "$match" : { "$expr" : { "$eq" : ["$_id", "$$school"]}}}],
+							"as" : "ppdb_schools"
+						}
+					},
+					{ "$unwind" : "$ppdb_schools"},
+					{ "$sort" : { "name" : 1}},
+					{ "$sort" : { "type" : 1}},
+					{ "$project" : { "_class" : 0}}
+		]
+		`)), true, &pipeline)
+	showInfoCursor, err := registrationsCollection.Aggregate(ctx,
+		pipeline,
+	)
+	*/
+
 	if err != nil {
 		panic(err)
 	}
 	//var showsWithInfo []bson.M
-	var showsWithInfo []ppdbOption
+	var showsWithInfo []PpdbOption
 	if err = showInfoCursor.All(ctx, &showsWithInfo); err != nil {
 		panic(err)
 	}
+
+	defer showInfoCursor.Close(ctx)
+
 	return showsWithInfo
+}
+
+func find(ctx context.Context, database *mongo.Database, firstChoice primitive.ObjectID) []PpdbRegistration {
+
+	//var optId = [1]primitive.ObjectID{firstChoice}
+	criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "smk"}
+	csr, err := database.Collection("ppdb_registrations").Find(ctx, criteria)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer csr.Close(ctx)
+
+	result := make([]PpdbRegistration, 0)
+	for csr.Next(ctx) {
+		var row PpdbRegistration
+		err := csr.Decode(&row)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		result = append(result, row)
+	}
+	return result
 }
 
 func main() {
@@ -331,14 +418,53 @@ func main() {
 	defer client.Disconnect(ctx)
 
 	database := client.Database("ppdb21")
-	registrationsCollection := database.Collection("ppdb_options")
 
 	//var schoolOption []bson.M
-	var schoolOption []ppdbOption
-	schoolOption = getSchoolAndOption(ctx, registrationsCollection)
+	var schoolOption []PpdbOption
+	schoolOption = getSchoolAndOption(ctx, database)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(schoolOption)
+	//fmt.Println(schoolOption)
+
+	ppdbOptions := make([]PpdbOption, 0)
+
+	for _, opt := range schoolOption {
+
+		fmt.Printf(opt.Id.String())
+		fmt.Printf(opt.PpdbSchool.Level)
+		fmt.Printf(opt.PpdbSchool.Type)
+
+		var studentRegistrations []PpdbRegistration
+		studentRegistrations = find(ctx, database, opt.Id)
+		/*for _, std := range studentRegistrations {
+			fmt.Println(std.Name)
+		}*/
+		tmp := PpdbOption{Id: opt.Id, Name: opt.Name, ppdbRegistration: studentRegistrations}
+		ppdbOptions = append(ppdbOptions, tmp)
+		/*	ppdbOptions[i].Name = opt.Name
+			ppdbOptions[i].Quota = opt.Quota
+			ppdbOptions[i].ppdbRegistration = studentRegistrations
+		*/
+	}
+
+	/*objectId, err := primitive.ObjectIDFromHex("60b5e513977fa9bd4ca13853")
+	if err != nil {
+		log.Println("Invalid id")
+	}
+
+		var studentRegistrations []ppdbRegistration
+		studentRegistrations = find(ctx, database, objectId)
+		for _, std := range studentRegistrations {
+			fmt.Println(std.Name)
+		} */
+
+	fmt.Println("len:", len(ppdbOptions))
+	for _, opt := range ppdbOptions {
+		fmt.Println(opt.Id, " - ", opt.Name, " \n ")
+		for _, std := range opt.ppdbRegistration {
+			fmt.Println(">", std.Name)
+		}
+	}
 
 }
