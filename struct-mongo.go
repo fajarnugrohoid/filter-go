@@ -3,12 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 type DummyStruct struct {
@@ -41,13 +39,14 @@ func close(client *mongo.Client, ctx context.Context,
 // context.Context will be used set deadlines for process.
 // context.CancelFunc will be used to cancel context and
 // resource associated with it.
+/*
 func connect(uri string) (*mongo.Client, context.Context, context.CancelFunc, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(),
 		30*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	return client, ctx, cancel, err
-}
+}*/
 
 // query method returns a cursor and error.
 func queryTest(client *mongo.Client, ctx context.Context, dataBase, col string, query, field interface{}) (result *mongo.Cursor, err error) {
@@ -171,25 +170,8 @@ type Item struct {
 	Price  float64 `bson:"price" json:"price"`
 }
 
+/*
 func main() {
-	/*test := DummyStruct{}
-	test.User = "test"
-	test.Foo.BarA = 123
-	test.Foo.BarB = 321
-	b, err := json.Marshal(test)
-	if err != nil {
-		fmt.Println("error marshaling test struct", err)
-		return
-	}
-	fmt.Println("test data\n", string(b))
-
-	items, err := fetchExpensiveItems("Italy", 200)
-	if err != nil {
-		fmt.Printf("Failed with error: %v", err)
-	}
-
-	fmt.Printf("Items matching criteria: %+v", items) */
-
 	// get Client, Context, CancelFunc and err from connect method.
 	client, ctx, cancel, err := connect("mongodb://localhost:27017")
 	if err != nil {
@@ -231,4 +213,4 @@ func main() {
 
 	//fmt.Println(results)
 
-}
+} */
