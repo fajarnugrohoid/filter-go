@@ -47,6 +47,53 @@ func indexOf(element primitive.ObjectID, data []models.PpdbOption) int {
 	return -1 //not found.
 }
 
+func processFilter(ppdbOptions []models.PpdbOption, status bool) []models.PpdbOption {
+
+	for i := 0; i < len(ppdbOptions); i++ {
+		if ppdbOptions[i].Filtered == 0 {
+			fmt.Println(ppdbOptions[i].Id, " - ", ppdbOptions[i].Name,
+				" len.std:", len(ppdbOptions[i].PpdbRegistration),
+				" : q: ", ppdbOptions[i].Quota, " \n ")
+
+			if len(ppdbOptions[i].PpdbRegistration) > ppdbOptions[i].Quota {
+
+				for j := ppdbOptions[i].Quota; j < len(ppdbOptions[i].PpdbRegistration); j++ {
+					idx := -1
+					if ppdbOptions[i].PpdbRegistration[j].AcceptedStatus == 0 {
+						ppdbOptions[i].PpdbRegistration[j].AcceptedStatus = 1
+						idx := indexOf(ppdbOptions[i].PpdbRegistration[j].SecondChoiceOption, ppdbOptions)
+						fmt.Println(">ori:", j, ":", ppdbOptions[i].PpdbRegistration[j].Name, "-", ppdbOptions[i].PpdbRegistration[j].SecondChoiceOption, " - ", idx)
+					} else if ppdbOptions[i].PpdbRegistration[j].AcceptedStatus == 1 {
+						ppdbOptions[i].PpdbRegistration[j].AcceptedStatus = 2
+						idx := indexOf(ppdbOptions[i].PpdbRegistration[j].ThirdChoiceOption, ppdbOptions)
+						fmt.Println(">ori:", j, ":", ppdbOptions[i].PpdbRegistration[j].Name, "-", ppdbOptions[i].PpdbRegistration[j].SecondChoiceOption, " - ", idx)
+					}
+					if idx == -1 {
+						ppdbOptions[i].PpdbRegistration[j].AcceptedStatus = 3
+						ppdbOptions[len(ppdbOptions)-1].AddStd(ppdbOptions[i].PpdbRegistration[j])
+						ppdbOptions[i].RemoveStd(j)
+						j--
+					} else {
+
+						ppdbOptions[idx].AddStd(ppdbOptions[i].PpdbRegistration[j])
+						ppdbOptions[i].RemoveStd(j)
+						j--
+						ppdbOptions[idx].Filtered = 0
+						status = true
+					}
+				}
+
+			}
+			ppdbOptions[i].Filtered = 1
+		}
+	}
+
+	if status == true {
+		return processFilter(ppdbOptions, false)
+	}
+	return ppdbOptions
+}
+
 func main() {
 	/*
 		start := time.Now()
@@ -106,6 +153,7 @@ func main() {
 			Id:               opt.Id,
 			Name:             opt.Name,
 			Quota:            opt.Quota,
+			Filtered:         0,
 			PpdbRegistration: studentRegistrations,
 		}
 		ppdbOptions = append(ppdbOptions, tmp)
@@ -114,6 +162,15 @@ func main() {
 			ppdbOptions[i].ppdbRegistration = studentRegistrations
 		*/
 	}
+	TmpId, err := primitive.ObjectIDFromHex("000000000000000000000000")
+	tmp := models.PpdbOption{
+		Id:               TmpId,
+		Name:             "Temporary",
+		Quota:            0,
+		Filtered:         1,
+		PpdbRegistration: nil,
+	}
+	ppdbOptions = append(ppdbOptions, tmp)
 
 	/*objectId, err := primitive.ObjectIDFromHex("60b5e513977fa9bd4ca13853")
 	if err != nil {
@@ -127,27 +184,14 @@ func main() {
 		} */
 
 	fmt.Println("len:", len(ppdbOptions))
-	for i := 0; i < len(ppdbOptions); i++ {
-		fmt.Println(ppdbOptions[i].Id, " - ", ppdbOptions[i].Name, " : q: ", ppdbOptions[i].Quota, " len.std:", len(ppdbOptions[i].PpdbRegistration), " \n ")
-		for j := 0; j < len(ppdbOptions[i].PpdbRegistration); j++ {
-			fmt.Println(">ori:", j, ":", ppdbOptions[i].PpdbRegistration[j].Name)
 
-			if ppdbOptions[i].Quota > len(ppdbOptions[i].PpdbRegistration) {
-				idx := indexOf(ppdbOptions[i].PpdbRegistration[j].SecondChoiceOption, ppdbOptions)
-				if idx != -1 {
-					ppdbOptions[idx].AddStd(ppdbOptions[i].PpdbRegistration[j])
-					ppdbOptions[idx].RemoveStd(j)
-				}
-			}
-
-		}
-	}
+	ppdbOptions = processFilter(ppdbOptions, false)
 
 	fmt.Println("===========================res==============================")
 	for _, opt := range ppdbOptions {
 		fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), " \n ")
 		for i, std := range opt.PpdbRegistration {
-			fmt.Println(">ori:", i, ":", std.Name)
+			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus)
 		}
 	}
 }

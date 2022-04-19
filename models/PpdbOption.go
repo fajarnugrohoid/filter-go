@@ -10,7 +10,8 @@ type PpdbOption struct {
 	QuotaOld         int                `bson:"quota_old,omitempty"`
 	TotalQuota       int                `bson:"total_quota,omitempty"`
 	SchoolId         primitive.ObjectID `bson:"school,omitempty"`
-	PpdbSchool       PpdbSchool         `bson:"ppdb_schools,omitempty"`
+	Filtered         int
+	PpdbSchool       PpdbSchool `bson:"ppdb_schools,omitempty"`
 	PpdbRegistration []PpdbRegistration
 }
 

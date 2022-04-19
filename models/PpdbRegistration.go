@@ -9,4 +9,5 @@ type PpdbRegistration struct {
 	SecondChoiceOption primitive.ObjectID `bson:"second_choice_option,omitempty"`
 	ThirdChoiceOption  primitive.ObjectID `bson:"third_choice_option,omitempty"`
 	Score              float32            `bson:"score,omitempty"`
+	AcceptedStatus     int
 }
