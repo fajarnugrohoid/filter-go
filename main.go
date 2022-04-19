@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sort"
 	"time"
 )
 
@@ -38,6 +39,12 @@ func (m byRate) Len() int           { return len(m) }
 func (m byRate) Less(i, j int) bool { return m[i].Rate < m[j].Rate }
 func (m byRate) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 
+type byScore []models.PpdbRegistration
+
+func (m byScore) Len() int           { return len(m) }
+func (m byScore) Less(i, j int) bool { return m[i].Score > m[j].Score }
+func (m byScore) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
 func indexOf(element primitive.ObjectID, data []models.PpdbOption) int {
 	for k, v := range data {
 		if element == v.Id {
@@ -51,6 +58,7 @@ func processFilter(ppdbOptions []models.PpdbOption, status bool) []models.PpdbOp
 
 	for i := 0; i < len(ppdbOptions); i++ {
 		if ppdbOptions[i].Filtered == 0 {
+			sort.Sort(byScore(ppdbOptions[i].PpdbRegistration))
 			fmt.Println(ppdbOptions[i].Id, " - ", ppdbOptions[i].Name,
 				" len.std:", len(ppdbOptions[i].PpdbRegistration),
 				" : q: ", ppdbOptions[i].Quota, " \n ")
@@ -95,29 +103,29 @@ func processFilter(ppdbOptions []models.PpdbOption, status bool) []models.PpdbOp
 }
 
 func main() {
-	/*
-		start := time.Now()
 
-		movies := []*Movie{
-			&Movie{"The 400 Blows", 1959, 8.1},
-			&Movie{"La Haine", 1995, 8.1},
-			&Movie{"The Godfather", 1972, 9.2},
-			&Movie{"The Godfather: Part II", 1974, 9},
-			&Movie{"Mafioso", 1962, 7.7}}
+	start := time.Now()
 
-		displayMovies("Movies (unsorted)", movies)
+	movies := []*Movie{
+		&Movie{"The 400 Blows", 1959, 8.1},
+		&Movie{"La Haine", 1995, 8.1},
+		&Movie{"The Godfather", 1972, 9.2},
+		&Movie{"The Godfather: Part II", 1974, 9},
+		&Movie{"Mafioso", 1962, 7.7}}
 
-		sort.Sort(byYear(movies))
-		displayMovies("Movies sorted by year", movies)
+	displayMovies("Movies (unsorted)", movies)
 
-		sort.Sort(byTitle(movies))
-		displayMovies("Movies sorted by title", movies)
+	sort.Sort(byYear(movies))
+	displayMovies("Movies sorted by year", movies)
 
-		sort.Sort(sort.Reverse(byRate(movies)))
-		displayMovies("Movies sorted by rate", movies)
+	sort.Sort(byTitle(movies))
+	displayMovies("Movies sorted by title", movies)
 
-		timeElapsed := time.Since(start)
-		fmt.Printf("The `for` loop took %s", timeElapsed)*/
+	sort.Sort(sort.Reverse(byRate(movies)))
+	displayMovies("Movies sorted by rate", movies)
+
+	timeElapsed := time.Since(start)
+	fmt.Printf("The `for` loop took %s", timeElapsed)
 
 	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -191,16 +199,15 @@ func main() {
 	for _, opt := range ppdbOptions {
 		fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), " \n ")
 		for i, std := range opt.PpdbRegistration {
-			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus)
+			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " score: ", std.Score)
 		}
 	}
 }
 
-/*
 func displayMovies(header string, movies []*Movie) {
 	fmt.Println(header)
 	for _, m := range movies {
 		fmt.Printf("\t- %s (%d) R:%.1f\n", m.Title, m.Year, m.Rate)
 	}
 	fmt.Println()
-}*/
+}
