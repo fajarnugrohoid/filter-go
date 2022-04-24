@@ -5,9 +5,13 @@ import (
 	"filterisasi/models"
 	"filterisasi/repositories"
 	"fmt"
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
+	"os"
 	"sort"
 	"time"
 )
@@ -106,29 +110,25 @@ func main() {
 
 	start := time.Now()
 
-	movies := []*Movie{
-		&Movie{"The 400 Blows", 1959, 8.1},
-		&Movie{"La Haine", 1995, 8.1},
-		&Movie{"The Godfather", 1972, 9.2},
-		&Movie{"The Godfather: Part II", 1974, 9},
-		&Movie{"Mafioso", 1962, 7.7}}
+	logger := logrus.New()
 
-	displayMovies("Movies (unsorted)", movies)
+	file, _ := os.OpenFile("application.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
-	sort.Sort(byYear(movies))
-	displayMovies("Movies sorted by year", movies)
+	err := godotenv.Load("local.env")
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
 
-	sort.Sort(byTitle(movies))
-	displayMovies("Movies sorted by title", movies)
+	val := os.Getenv("STACK")
+	fmt.Println(val)
+	if (os.Getenv("LOGGING") == "file") {
+		logger.SetOutput(file)
+	}
+	logger.Info("hello logging")
 
-	sort.Sort(sort.Reverse(byRate(movies)))
-	displayMovies("Movies sorted by rate", movies)
-
-	timeElapsed := time.Since(start)
-	fmt.Printf("The `for` loop took %s", timeElapsed)
-
-	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	ctx := context.Background()
+	//ctx, _ := context.WithTimeout(context.Background(), 200*time.Second)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("URL")))
 	if err != nil {
 		panic(err)
 	}
@@ -136,21 +136,19 @@ func main() {
 
 	database := client.Database("ppdb21")
 
-	//var schoolOption []bson.M
 	var schoolOption []models.PpdbOption
 	schoolOption = repositories.GetSchoolAndOption(ctx, database)
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println(schoolOption)
+
+	fmt.Println(len(schoolOption))
 
 	ppdbOptions := make([]models.PpdbOption, 0)
 
 	for _, opt := range schoolOption {
 
-		//fmt.Printf(opt.Id.String())
-		//fmt.Printf(opt.PpdbSchool.Level)
-		//fmt.Printf(opt.PpdbSchool.Type)
+		fmt.Printf(opt.Id.String())
 
 		var studentRegistrations []models.PpdbRegistration
 		studentRegistrations = repositories.GetRegistrations(ctx, database, opt.Id)
@@ -202,6 +200,8 @@ func main() {
 			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " score: ", std.Score)
 		}
 	}
+	timeElapsed := time.Since(start)
+	fmt.Printf("The `for` loop took %s", timeElapsed)
 }
 
 func displayMovies(header string, movies []*Movie) {
