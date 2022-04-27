@@ -12,3 +12,9 @@ type PpdbRegistration struct {
 	Distance1          float64            `bson:"distance1,omitempty"`
 	AcceptedStatus     int
 }
+
+type ByScore []PpdbRegistration
+
+func (m ByScore) Len() int           { return len(m) }
+func (m ByScore) Less(i, j int) bool { return m[i].Score > m[j].Score }
+func (m ByScore) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }

@@ -4,8 +4,10 @@ import (
 	"context"
 	"filterisasi/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
 /*
@@ -44,19 +46,18 @@ func GetSchoolAndOption(ctx context.Context, database *mongo.Database) []models.
 	registrationsCollection := database.Collection("ppdb_options")
 	var optionsType = [7]string{"abk", "kondisi-tertentu", "ketm", "perpindahan", "prestasi-rapor", "prestasi", "zonasi"}
 
-	/*
-		objectId, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c4f")
-		if err != nil {
-			log.Println("Invalid id")
-		} */
+	objectId, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c4f")
+	if err != nil {
+		log.Println("Invalid id")
+	}
 
-	//var schoolIds = [1]primitive.ObjectID{objectId}
+	var schoolIds = [1]primitive.ObjectID{objectId}
 	matchStage := bson.D{{"$match", bson.M{
 		"type": bson.M{"$in": optionsType},
-		/*"$and": []bson.M{bson.M{
+		"$and": []bson.M{bson.M{
 			"school": bson.M{"$in": schoolIds},
 		},
-		},*/
+		},
 	}}}
 	//groupStage := bson.M{{"$group", bson.M{{"_id", "$podcast"}, {"total", bson.M{{"$sum", "$duration"}}}}}}
 
@@ -123,7 +124,7 @@ func GetSchoolAndOption(ctx context.Context, database *mongo.Database) []models.
 
 	//var showsWithInfo []bson.M
 	var showsWithInfo []models.PpdbOption
-	
+
 	if err = showInfoCursor.All(ctx, &showsWithInfo); err != nil {
 		panic(err)
 	}
