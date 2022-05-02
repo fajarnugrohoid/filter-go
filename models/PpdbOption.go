@@ -1,6 +1,8 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type PpdbOption struct {
 	Id               primitive.ObjectID `bson:"_id,omitempty"`
@@ -19,17 +21,18 @@ func (ppdbOption PpdbOption) addItem(options []PpdbOption) []PpdbOption {
 	return append(options, ppdbOption)
 }
 
-type PpdbOptionList struct {
-	options []PpdbOption
-}
-
-func (optionList *PpdbOptionList) AddOpt(item PpdbOption) {
-	optionList.options = append(optionList.options, item)
-}
-
 func (option *PpdbOption) AddStd(item PpdbRegistration) {
 	option.PpdbRegistration = append(option.PpdbRegistration, item)
 }
 func (option *PpdbOption) RemoveStd(i int) {
 	option.PpdbRegistration = append(option.PpdbRegistration[:i], option.PpdbRegistration[i+1:]...)
+}
+
+func FindIndex(element primitive.ObjectID, data []*PpdbOption) int {
+	for k, v := range data {
+		if element == v.Id {
+			return k
+		}
+	}
+	return -1 //not found.
 }

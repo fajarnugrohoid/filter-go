@@ -10,7 +10,7 @@ type PpdbRegistration struct {
 	ThirdChoiceOption  primitive.ObjectID `bson:"third_choice_option,omitempty"`
 	Score              float64            `bson:"score,omitempty"`
 	Distance1          float64            `bson:"distance1,omitempty"`
-	AcceptedStatus     int
+	AcceptedStatus     int                `bson:"accepted_status"`
 }
 
 type ByScore []PpdbRegistration

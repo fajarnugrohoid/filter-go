@@ -4,9 +4,7 @@ import (
 	"context"
 	"filterisasi/models"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 )
 
 func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions []models.PpdbOption) {
@@ -16,45 +14,15 @@ func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions [
 		newValue = append(newValue, v)
 	}
 
-	objectId1, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c41")
-	objectId2, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c42")
-	objectId3, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c43")
-	if err != nil {
-		log.Println("Invalid id")
-	}
+	/*
+		objectId1, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c41")
+		objectId2, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c42")
+		objectId3, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c43")
+		if err != nil {
+			log.Println("Invalid id")
+		}*/
 
-	akash := models.PpdbRegistration{
-		objectId1,
-		"Akash",
-		objectId1,
-		objectId1,
-		objectId1,
-		50.00,
-		10.00,
-		1,
-	}
-	bob := models.PpdbRegistration{
-		objectId2,
-		"bob",
-		objectId2,
-		objectId2,
-		objectId2,
-		50.00,
-		10.00,
-		1,
-	}
-	robin := models.PpdbRegistration{
-		objectId3,
-		"robin",
-		objectId3,
-		objectId3,
-		objectId3,
-		50.00,
-		10.00,
-		1,
-	}
-
-	persons := []interface{}{akash, bob, robin}
+	persons := []interface{}{}
 
 	for i := 0; i < len(ppdbOptions); i++ {
 		for _, v := range ppdbOptions[i].PpdbRegistration {

@@ -4,10 +4,10 @@ import (
 	"context"
 	"filterisasi/models"
 	"filterisasi/repositories"
+	"filterisasi/utility"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -54,7 +54,10 @@ func main() {
 
 	fmt.Println(len(schoolOption))
 
-	ppdbOptions := make([]models.PpdbOption, 0)
+	var optionTypes map[string][]*models.PpdbOption
+	optionTypes = map[string][]*models.PpdbOption{}
+
+	//ppdbOptions := make([]models.PpdbOption, 0)
 
 	for _, opt := range schoolOption {
 
@@ -65,28 +68,32 @@ func main() {
 		//for _, std := range studentRegistrations {
 		//	fmt.Println(std.Name)
 		//}
-		tmp := models.PpdbOption{
+		tmpOpt := &models.PpdbOption{
 			Id:               opt.Id,
 			Name:             opt.Name,
 			Quota:            opt.Quota,
+			Type:             opt.Type,
 			Filtered:         0,
 			PpdbRegistration: studentRegistrations,
 		}
-		ppdbOptions = append(ppdbOptions, tmp)
+		//ppdbOptions = append(ppdbOptions, tmpOpt)
+
+		switch opt.Type {
+		/*case "abk":
+			optionTypes["abk"] = append(optionTypes["abk"], tmpOpt)
+			break
+		case "kondisi-tertentu":
+			optionTypes["kondisi-tertentu"] = append(optionTypes["kondisi-tertentu"], tmpOpt)
+			break */
+		case "ketm":
+			optionTypes["ketm"] = append(optionTypes["ketm"], tmpOpt)
+			break
+		}
+
 		///	ppdbOptions[i].Name = opt.Name
 		//	ppdbOptions[i].Quota = opt.Quota
 		//	ppdbOptions[i].ppdbRegistration = studentRegistrations
 	}
-	TmpId, err := primitive.ObjectIDFromHex("000000000000000000000000")
-	tmp := models.PpdbOption{
-		Id:               TmpId,
-		Name:             "Temporary",
-		Quota:            0,
-		Filtered:         1,
-		PpdbRegistration: nil,
-	}
-	ppdbOptions = append(ppdbOptions, tmp)
-	repositories.InsertFiltered(ctx, database, ppdbOptions)
 
 	/*objectId, err := primitive.ObjectIDFromHex("60b5e513977fa9bd4ca13853")
 	if err != nil {
@@ -98,19 +105,32 @@ func main() {
 		fmt.Println(std.Name)
 	} */
 
+	fmt.Println("len abk:", len(optionTypes["abk"]))
+	fmt.Println("len kondisi-tertentu:", len(optionTypes["kondisi-tertentu"]))
+	fmt.Println("len ketm:", len(optionTypes["ketm"]))
+	utility.Filter2OptionsShareQuota(optionTypes)
+
+	//optionTypes["ketm"] = utility.ProcessFilter(optionTypes["ketm"], false)
+
+	fmt.Println("===========================res==============================")
+	for _, opt := range optionTypes["ketm"] {
+		fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), " \n ")
+		for i, std := range opt.PpdbRegistration {
+			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " score: ", std.Score)
+		}
+	}
+
 	/*
-		fmt.Println("len:", len(ppdbOptions))
-
-
-		ppdbOptions = utility.ProcessFilter(ppdbOptions, false)
-
-		fmt.Println("===========================res==============================")
-		for _, opt := range ppdbOptions {
-			fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), " \n ")
-			for i, std := range opt.PpdbRegistration {
-				fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " score: ", std.Score)
-			}
-		}*/
+		TmpId, err := primitive.ObjectIDFromHex("000000000000000000000000")
+		tmp := models.PpdbOption{
+			Id:               TmpId,
+			Name:             "Temporary",
+			Quota:            0,
+			Filtered:         1,
+			PpdbRegistration: nil,
+		}
+		ppdbOptions = append(ppdbOptions, tmp) */
+	//repositories.InsertFiltered(ctx, database, ppdbOptions)
 	timeElapsed := time.Since(start)
 	fmt.Printf("The `for` loop took %s", timeElapsed)
 }

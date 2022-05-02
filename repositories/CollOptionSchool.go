@@ -46,12 +46,13 @@ func GetSchoolAndOption(ctx context.Context, database *mongo.Database) []models.
 	registrationsCollection := database.Collection("ppdb_options")
 	var optionsType = [7]string{"abk", "kondisi-tertentu", "ketm", "perpindahan", "prestasi-rapor", "prestasi", "zonasi"}
 
-	objectId, err := primitive.ObjectIDFromHex("608f7e3819a57c0012556c4f")
+	objectId1, err := primitive.ObjectIDFromHex("608f85bf78c5383cc367c2f8")
+	objectId2, err := primitive.ObjectIDFromHex("608f85be78c5383cc367c2f1")
 	if err != nil {
 		log.Println("Invalid id")
 	}
 
-	var schoolIds = [1]primitive.ObjectID{objectId}
+	var schoolIds = [2]primitive.ObjectID{objectId1, objectId2}
 	matchStage := bson.D{{"$match", bson.M{
 		"type": bson.M{"$in": optionsType},
 		"$and": []bson.M{bson.M{

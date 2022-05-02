@@ -3,10 +3,11 @@ package utility
 import (
 	"filterisasi/models"
 	"fmt"
-	"sort"
+	"runtime"
 )
 
-func ProcessFilter(ppdbOptions []models.PpdbOption, status bool) []models.PpdbOption {
+/*
+func (ppdbOptions *models.PpdbOptionList) ProcessFilter(status bool) []models.PpdbOption {
 
 	for i := 0; i < len(ppdbOptions); i++ {
 		if ppdbOptions[i].Filtered == 0 {
@@ -52,4 +53,29 @@ func ProcessFilter(ppdbOptions []models.PpdbOption, status bool) []models.PpdbOp
 		return ProcessFilter(ppdbOptions, false)
 	}
 	return ppdbOptions
+} */
+
+func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption) {
+
+	runtime.GOMAXPROCS(2)
+	var messages = make(chan []*models.PpdbOption)
+
+	/*
+		var getFiltered = func(option []models.PpdbOption) {
+			ppdbOptions := models.ProcessFilter(option, false)
+			messages <- ppdbOptions
+		}*/
+
+	var getFiltered = func(objs chan []*models.PpdbOption, option []*models.PpdbOption) {
+		ppdbOptions := models.ProcessFilter(option, false)
+		messages <- ppdbOptions
+	}
+	go getFiltered(messages, optionTypes["ketm"])
+
+	data := <-messages // read from channel a
+
+	close(messages)
+
+	fmt.Println(data)
+
 }
