@@ -18,3 +18,9 @@ type ByScore []PpdbRegistration
 func (m ByScore) Len() int           { return len(m) }
 func (m ByScore) Less(i, j int) bool { return m[i].Score > m[j].Score }
 func (m ByScore) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
+type ByDistance []PpdbRegistration
+
+func (m ByDistance) Len() int           { return len(m) }
+func (m ByDistance) Less(i, j int) bool { return m[i].Distance1 < m[j].Distance1 }
+func (m ByDistance) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }

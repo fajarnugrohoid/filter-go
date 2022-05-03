@@ -55,11 +55,11 @@ func (ppdbOptions *models.PpdbOptionList) ProcessFilter(status bool) []models.Pp
 	return ppdbOptions
 } */
 
-func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption) {
+func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption) []*models.PpdbOption {
 
 	runtime.GOMAXPROCS(2)
 	var messages = make(chan []*models.PpdbOption)
-
+	fmt.Println("Filter2OptionsShareQuota")
 	/*
 		var getFiltered = func(option []models.PpdbOption) {
 			ppdbOptions := models.ProcessFilter(option, false)
@@ -67,15 +67,21 @@ func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption) {
 		}*/
 
 	var getFiltered = func(objs chan []*models.PpdbOption, option []*models.PpdbOption) {
-		ppdbOptions := models.ProcessFilter(option, false)
+		fmt.Println("bef getFiltered:")
+		ppdbOptions := models.ProcessFilter(option, true)
+		fmt.Println("aft getFiltered")
 		messages <- ppdbOptions
 	}
+	fmt.Println("end getFiltered")
 	go getFiltered(messages, optionTypes["ketm"])
-
+	fmt.Println("go done getFiltered")
 	data := <-messages // read from channel a
 
 	close(messages)
 
-	fmt.Println(data)
+	fmt.Println("close messages")
 
+	//fmt.Println(data)
+
+	return data
 }

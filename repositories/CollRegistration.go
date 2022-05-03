@@ -13,7 +13,8 @@ import (
 func GetRegistrations(ctx context.Context, database *mongo.Database, firstChoice primitive.ObjectID) []models.PpdbRegistration {
 
 	//var optId = [1]primitive.ObjectID{firstChoice}
-	criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
+	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
+	criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma"}
 	findOptions := options.Find()
 	findOptions.SetSort(bson.D{{"distance1", 1}})
 

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -30,7 +31,8 @@ func (option *PpdbOption) RemoveStd(i int) {
 
 func FindIndex(element primitive.ObjectID, data []*PpdbOption) int {
 	for k, v := range data {
-		if element == v.Id {
+		fmt.Println("element:", element.String(), "==", v.Id.String())
+		if element.String() == v.Id.String() {
 			return k
 		}
 	}
