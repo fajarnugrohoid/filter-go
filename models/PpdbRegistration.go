@@ -11,6 +11,7 @@ type PpdbRegistration struct {
 	Score              float64            `bson:"score,omitempty"`
 	Distance1          float64            `bson:"distance1,omitempty"`
 	AcceptedStatus     int                `bson:"accepted_status"`
+	AcceptedIndex      int
 }
 
 type ByScore []PpdbRegistration
