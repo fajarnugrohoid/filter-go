@@ -82,16 +82,22 @@ func DoFilter(optionTypes map[string][]*models.PpdbOption) map[string][]*models.
 	}
 
 	//share quota
-	optionTypes = CheckQuota(optionTypes, "ketm", "kondisi-tertentu")
-	optionTypes = CheckQuota(optionTypes, "kondisi-tertentu", "ketm")
+	var reFilterKondisiTertentu, reFilterKetm bool
+
+	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "ketm", "kondisi-tertentu", false)
+	optionTypes, reFilterKetm = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false)
 
 	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm")
 	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu")
 
+	if (reFilterKondisiTertentu == true || reFilterKetm == true) {
+		return DoFilter(optionTypes)
+	}
+
 	return optionTypes
 }
 
-func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string) map[string][]*models.PpdbOption {
+func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, reFilter bool) (map[string][]*models.PpdbOption, bool) {
 	fmt.Println("===========================need quota==============================")
 
 	for i := 0; i < len(optionTypes[currentType]); i++ {
@@ -121,11 +127,11 @@ func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string,
 
 				optionTypes[currentType][i].Filtered = 0
 				optionTypes[currentType] = PullStudentToFirstChoice(optionTypes[currentType], i)
-
+				reFilter = true
 			}
 		}
 	}
-	return optionTypes
+	return optionTypes, reFilter
 }
 
 func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt int) []*models.PpdbOption {
