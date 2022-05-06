@@ -91,6 +91,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool) []*PpdbOption {
 
 				}
 				optionList[i].IsNeedQuota = true
+				optionList[i].NeedQuota = len(optionList[i].PpdbRegistration) - optionList[i].Quota
 			}
 			optionList[i].Filtered = 1
 		}

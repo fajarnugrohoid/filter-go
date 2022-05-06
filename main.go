@@ -147,26 +147,11 @@ func main() {
 				" AcceptedIndex: ", std.AcceptedIndex)
 		}
 	}
-	optionTypes["ketm"] = utility.Filter2OptionsShareQuota(optionTypes, "ketm")
-	optionTypes["kondisi-tertentu"] = utility.Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu")
 
-	//optionTypes["ketm"] = utility.ProcessFilter(optionTypes["ketm"], false)
+	optionTypes = utility.DoFilter(optionTypes)
 
-	fmt.Println("===========================res==============================")
+	fmt.Println("===========================res-end==============================")
 	for _, opt := range optionTypes["ketm"] {
-		fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), "")
-		for i, std := range opt.PpdbRegistration {
-			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
-				" distance1: ", std.Distance1)
-		}
-		for i, std := range opt.RegistrationHistory {
-			fmt.Println(">hist2:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
-				" AcceptedIndex: ", std.AcceptedIndex)
-		}
-		fmt.Println("\n")
-	}
-
-	for _, opt := range optionTypes["kondisi-tertentu"] {
 		fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), "")
 		for i, std := range opt.PpdbRegistration {
 			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1)
@@ -176,69 +161,16 @@ func main() {
 
 	fmt.Println("===========================need quota==============================")
 	for i := 0; i < len(optionTypes["ketm"]); i++ {
-		fmt.Println(i, "-", optionTypes["ketm"][i].Id, " - ", optionTypes["ketm"][i].Name, " : q: ", optionTypes["ketm"][i].Quota, " - needQuota:", optionTypes["ketm"][i].IsNeedQuota)
-
-		if i == len(optionTypes["ketm"])-1 {
-			continue
-		}
-
-		if optionTypes["ketm"][i].IsNeedQuota == true && optionTypes["kondisi-tertentu"][i].IsNeedQuota == false {
-			sisa := optionTypes["kondisi-tertentu"][i].Quota - len(optionTypes["kondisi-tertentu"][i].PpdbRegistration)
-			optionTypes["ketm"][i].Quota = optionTypes["ketm"][i].Quota + sisa
-			optionTypes["ketm"][i].Filtered = 0
-			for j := 0; j < len(optionTypes["ketm"][i].RegistrationHistory); j++ {
-				if optionTypes["ketm"][i].RegistrationHistory[j].AcceptedStatus != 0 {
-					var targetIdxStd int
-					var targetIdxOpt int
-					if optionTypes["ketm"][i].RegistrationHistory[j].AcceptedIndex == -1 {
-						targetIdxOpt = len(optionTypes["ketm"]) - 1
-						targetIdxStd = models.FindIndexStudent(optionTypes["ketm"][i].RegistrationHistory[j].Id, optionTypes["ketm"][targetIdxOpt].PpdbRegistration)
-
-						fmt.Println("Yg tidak diterima == :",
-							optionTypes["ketm"][i].RegistrationHistory[j].Id,
-							" - ", optionTypes["ketm"][i].RegistrationHistory[j].Name,
-							" - AccStatus:", optionTypes["ketm"][i].RegistrationHistory[j].AcceptedStatus,
-							" - targetIdxOpt:", targetIdxOpt,
-							" - TargetIdxStd:", targetIdxStd,
-						)
-
-					} else {
-						targetIdxOpt = optionTypes["ketm"][i].RegistrationHistory[j].AcceptedIndex
-						targetIdxStd = models.FindIndexStudent(optionTypes["ketm"][i].RegistrationHistory[j].Id, optionTypes["ketm"][targetIdxOpt].PpdbRegistration)
-						fmt.Println("Yg tidak diterima !=:",
-							optionTypes["ketm"][i].RegistrationHistory[j].Id,
-							" - ", optionTypes["ketm"][i].RegistrationHistory[j].Name,
-							" - AccStatus:", optionTypes["ketm"][i].RegistrationHistory[j].AcceptedStatus,
-							" - targetIdxOpt:", targetIdxOpt,
-							" - TargetIdxStd:", targetIdxStd,
-						)
-					}
-
-					optionTypes["ketm"][targetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = 0
-					optionTypes["ketm"][i].RegistrationHistory[j].AcceptedStatus = 0
-
-					optionTypes["ketm"][i].AddStd(optionTypes["ketm"][targetIdxOpt].PpdbRegistration[targetIdxStd])
-
-					optionTypes["ketm"][targetIdxOpt].RemoveStd(targetIdxStd)
-					if (targetIdxOpt != len(optionTypes["ketm"])-1) {
-						optionTypes["ketm"][targetIdxOpt].Filtered = 0
-					}
-
-				}
-			}
-		}
+		fmt.Println(i, "-", optionTypes["ketm"][i].Id, " - ", optionTypes["ketm"][i].Name,
+			" : q: ", optionTypes["ketm"][i].Quota,
+			" : p: ", len(optionTypes["ketm"][i].PpdbRegistration),
+			" - needQuota:", optionTypes["ketm"][i].IsNeedQuota)
 	}
-
-	optionTypes["ketm"] = utility.Filter2OptionsShareQuota(optionTypes, "ketm")
-	//optionTypes["kondisi-tertentu"] = utility.Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu")
-
-	fmt.Println("===========================res-end==============================")
-	for _, opt := range optionTypes["ketm"] {
-		fmt.Println(opt.Id, " - ", opt.Name, " : q: ", opt.Quota, " len.std:", len(opt.PpdbRegistration), "")
-		for i, std := range opt.PpdbRegistration {
-			fmt.Println(">ori:", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1)
-		}
-		fmt.Println("\n")
+	for i := 0; i < len(optionTypes["kondisi-tertentu"]); i++ {
+		fmt.Println(i, "-", optionTypes["kondisi-tertentu"][i].Id, " - ", optionTypes["kondisi-tertentu"][i].Name,
+			" : q: ", optionTypes["kondisi-tertentu"][i].Quota,
+			" : p: ", len(optionTypes["kondisi-tertentu"][i].PpdbRegistration),
+			" - needQuota:", optionTypes["kondisi-tertentu"][i].IsNeedQuota)
 	}
 
 	//repositories.InsertFiltered(ctx, database, ppdbOptions)

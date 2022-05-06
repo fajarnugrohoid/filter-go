@@ -14,6 +14,7 @@ type PpdbOption struct {
 	SchoolId            primitive.ObjectID `bson:"school,omitempty"`
 	Filtered            int
 	IsNeedQuota         bool
+	NeedQuota           int
 	PpdbSchool          PpdbSchool `bson:"ppdb_schools,omitempty"`
 	PpdbRegistration    []PpdbRegistration
 	RegistrationHistory []PpdbRegistration
