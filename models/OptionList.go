@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"sort"
 )
 
 type PpdbOptionList struct {
@@ -13,25 +12,33 @@ func (optionList *PpdbOptionList) AddOpt(item PpdbOption) {
 	optionList.options = append(optionList.options, item)
 }
 
-func ProcessFilter(optionList []*PpdbOption, status bool) []*PpdbOption {
+func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOption {
 	var optIdx int
 	var stdIdx int
 	for i := 0; i < len(optionList); i++ {
-		fmt.Println("ProcessFilter:", optionList[i].Id)
+		//fmt.Println("ProcessFilter:", optionList[i].Id)
 		if optionList[i].Filtered == 0 {
-			sort.Sort(ByDistance(optionList[i].PpdbRegistration))
-			fmt.Println(optionList[i].Id, " - ", optionList[i].Name,
-				" len.std:", len(optionList[i].PpdbRegistration),
-				" : q: ", optionList[i].Quota, " \n ")
+			SortByDistanceAndAge(optionList[i].PpdbRegistration)
+			/*
+				fmt.Println(optionList[i].Id, " - ", optionList[i].Name,
+					" len.std:", len(optionList[i].PpdbRegistration),
+					" : q: ", optionList[i].Quota, " \n ") */
 
 			if len(optionList[i].PpdbRegistration) > optionList[i].Quota { //cek jml pendaftar lebih dari quota sekolah
 
+				if optionList[i].UpdateQuota == true {
+					optionList[i].NeedQuotaFirstOpt = (len(optionList[i].PpdbRegistration) - optionList[i].Quota)
+					optionList[i].UpdateQuota = false
+				}
+				fmt.Println(optionList[i].Name, " NeedQuotaFirstOpt:", optionList[i].NeedQuotaFirstOpt)
+
+				x := 0
 				for j := optionList[i].Quota; j < len(optionList[i].PpdbRegistration); j++ { ////cut siswa yg lebih dari quota move to sec, third choice
 					//idx = -1
 
 					optIdxFirstChoice := FindIndex(optionList[i].PpdbRegistration[j].FirstChoiceOption, optionList)
 					stdIdx = FindIndexStudent(optionList[i].PpdbRegistration[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
-					fmt.Println("findIdxStd:",
+					fmt.Println(x, "-findIdxStd:",
 						optionList[i].Name, "-",
 						optionList[i].PpdbRegistration[j].Id, "-",
 						optionList[i].PpdbRegistration[j].Name,
@@ -55,7 +62,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool) []*PpdbOption {
 
 						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 1
 						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
-						fmt.Println(">sec ori:", j, ":",
+						fmt.Println("          >sec ori:", j, ":",
 							optionList[i].PpdbRegistration[j].Name, "-",
 							optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Name, "-",
 							optionList[i].PpdbRegistration[j].SecondChoiceOption, " - ",
@@ -66,10 +73,9 @@ func ProcessFilter(optionList []*PpdbOption, status bool) []*PpdbOption {
 
 						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 2
 						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
-						fmt.Println(">third ori:", j, ":", optionList[i].PpdbRegistration[j].Name, "-", optionList[i].PpdbRegistration[j].SecondChoiceOption, " - ", optIdx)
+						fmt.Println("          >third ori:", j, ":", optionList[i].PpdbRegistration[j].Name, "-", optionList[i].PpdbRegistration[j].SecondChoiceOption, " - ", optIdx)
 					}
 
-					fmt.Println("idx:", optIdx, "-", optionList[i].PpdbRegistration[j].Name)
 					if optIdx == -1 || optIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
 						fmt.Println("in if -1 idx:", optIdx, "-", optionList[i].PpdbRegistration[j].Name, "-", len(optionList)-1)
 						optionList[i].PpdbRegistration[j].AcceptedStatus = 3
@@ -88,17 +94,16 @@ func ProcessFilter(optionList []*PpdbOption, status bool) []*PpdbOption {
 						status = true
 
 					}
-
+					x++
 				}
-				optionList[i].IsNeedQuota = true
-				optionList[i].NeedQuota = len(optionList[i].PpdbRegistration) - optionList[i].Quota
+
 			}
 			optionList[i].Filtered = 1
 		}
 	}
 
 	if status == true {
-		return ProcessFilter(optionList, false)
+		return ProcessFilter(optionList, false, 1)
 	}
 	return optionList
 }

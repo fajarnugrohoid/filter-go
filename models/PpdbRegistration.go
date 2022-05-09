@@ -1,6 +1,9 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"sort"
+)
 
 type PpdbRegistration struct {
 	Id                 primitive.ObjectID `bson:"_id,omitempty"`
@@ -9,7 +12,9 @@ type PpdbRegistration struct {
 	SecondChoiceOption primitive.ObjectID `bson:"second_choice_option,omitempty"`
 	ThirdChoiceOption  primitive.ObjectID `bson:"third_choice_option,omitempty"`
 	Score              float64            `bson:"score,omitempty"`
+	Distance           float64
 	Distance1          float64            `bson:"distance1,omitempty"`
+	BirthDate          primitive.DateTime `bson:"birth_date,omitempty"`
 	AcceptedStatus     int                `bson:"accepted_status"`
 	AcceptedIndex      int
 }
@@ -25,3 +30,15 @@ type ByDistance []PpdbRegistration
 func (m ByDistance) Len() int           { return len(m) }
 func (m ByDistance) Less(i, j int) bool { return m[i].Distance1 < m[j].Distance1 }
 func (m ByDistance) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
+func SortByDistanceAndAge(members []PpdbRegistration) {
+	sort.SliceStable(members, func(i, j int) bool {
+		mi, mj := members[i], members[j]
+		switch {
+		case mi.Distance1 != mj.Distance1:
+			return mi.Distance1 < mj.Distance1
+		default:
+			return mi.BirthDate < mj.BirthDate
+		}
+	})
+}
