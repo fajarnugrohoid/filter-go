@@ -86,7 +86,7 @@ func DoFilter(optionTypes map[string][]*models.PpdbOption) map[string][]*models.
 	var reFilterKondisiTertentu, reFilterKetm bool
 
 	optionTypes, reFilterKetm = CheckQuota(optionTypes, "ketm", "kondisi-tertentu", false)
-	//optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false)
+	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false)
 
 	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 1)
 	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 1)
@@ -126,11 +126,12 @@ func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string,
 					fmt.Println("targetType.quota:", optionTypes[targetType][i].Quota)
 				} else {
 					//jika kebutuhan kuota hanya sedikit artinya hanya membutuhkan sedikit dari sisa kuota lawannya
-					quotaNeeded := sisaQuota - optionTypes[currentType][i].NeedQuotaFirstOpt
-					optionTypes[currentType][i].Quota = optionTypes[currentType][i].Quota + quotaNeeded
-					optionTypes[currentType][i].AddQuota += quotaNeeded
+					fmt.Println("sisaQuota:", sisaQuota, " - NeedQuotaFirstOpt:", optionTypes[currentType][i].NeedQuotaFirstOpt)
+					optionTypes[currentType][i].Quota = optionTypes[currentType][i].Quota + optionTypes[currentType][i].NeedQuotaFirstOpt
+					optionTypes[currentType][i].AddQuota += optionTypes[currentType][i].NeedQuotaFirstOpt
+					optionTypes[targetType][i].Quota = optionTypes[targetType][i].Quota - optionTypes[currentType][i].NeedQuotaFirstOpt
 					optionTypes[currentType][i].NeedQuotaFirstOpt = 0
-					optionTypes[targetType][i].Quota = optionTypes[targetType][i].Quota - quotaNeeded
+
 				}
 
 				optionTypes[currentType][i].Filtered = 0
@@ -194,6 +195,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			}
 
 			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = 0
+			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
 			optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus = 0
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])

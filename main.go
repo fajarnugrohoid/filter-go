@@ -164,6 +164,14 @@ func main() {
 	} */
 
 	fmt.Println("len abk:", len(optionTypes["abk"]))
+	fmt.Println("len ketm:", len(optionTypes["ketm"]))
+	for i, opt := range optionTypes["ketm"] {
+		fmt.Println(i, "-", opt.Id, " - ", opt.Name, " - q: ", opt.Quota, " - p:", len(opt.PpdbRegistration))
+		/*for i, std := range opt.PpdbRegistration {
+			fmt.Println("", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
+				" AcceptedIndex: ", std.AcceptedIndex)
+		}*/
+	}
 	fmt.Println("len kondisi-tertentu:", len(optionTypes["kondisi-tertentu"]))
 	for i, opt := range optionTypes["kondisi-tertentu"] {
 		fmt.Println(i, "-", opt.Id, " - ", opt.Name, " - q: ", opt.Quota, " - p:", len(opt.PpdbRegistration))
@@ -171,14 +179,6 @@ func main() {
 			fmt.Println("", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
 				" AcceptedIndex: ", std.AcceptedIndex)
 		}*/
-	}
-	fmt.Println("len ketm:", len(optionTypes["ketm"]))
-	for i, opt := range optionTypes["ketm"] {
-		fmt.Println(i, "-", opt.Id, " - ", opt.Name, " - q: ", opt.Quota, " - p:", len(opt.PpdbRegistration))
-		for i, std := range opt.PpdbRegistration {
-			fmt.Println("", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
-				" AcceptedIndex: ", std.AcceptedIndex)
-		}
 	}
 
 	optionTypes = utility.DoFilter(optionTypes)
@@ -201,7 +201,7 @@ func main() {
 			" - AddQuota:", optionTypes["ketm"][i].AddQuota,
 		)
 		for i, std := range optionTypes["ketm"][i].PpdbRegistration {
-			fmt.Println(">", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1, " Birth:", std.BirthDate)
+			fmt.Println(">", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance: ", std.Distance, " Birth:", std.BirthDate)
 		}
 	}
 	for i := 0; i < len(optionTypes["kondisi-tertentu"]); i++ {

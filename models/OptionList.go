@@ -34,7 +34,6 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 
 				x := 0
 				for j := optionList[i].Quota; j < len(optionList[i].PpdbRegistration); j++ { ////cut siswa yg lebih dari quota move to sec, third choice
-					//idx = -1
 
 					optIdxFirstChoice := FindIndex(optionList[i].PpdbRegistration[j].FirstChoiceOption, optionList)
 					stdIdx = FindIndexStudent(optionList[i].PpdbRegistration[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
@@ -57,6 +56,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 
 					if optionList[i].PpdbRegistration[j].AcceptedStatus == 0 {
 						optionList[i].PpdbRegistration[j].AcceptedStatus = 1
+						optionList[i].PpdbRegistration[j].Distance = optionList[i].PpdbRegistration[j].Distance2
 
 						optIdx = FindIndex(optionList[i].PpdbRegistration[j].SecondChoiceOption, optionList)
 
@@ -69,11 +69,18 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optIdx)
 					} else if optionList[i].PpdbRegistration[j].AcceptedStatus == 1 {
 						optionList[i].PpdbRegistration[j].AcceptedStatus = 2
+						optionList[i].PpdbRegistration[j].Distance = optionList[i].PpdbRegistration[j].Distance3
+
 						optIdx = FindIndex(optionList[i].PpdbRegistration[j].ThirdChoiceOption, optionList)
 
 						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 2
 						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
 						fmt.Println("          >third ori:", j, ":", optionList[i].PpdbRegistration[j].Name, "-", optionList[i].PpdbRegistration[j].SecondChoiceOption, " - ", optIdx)
+					} else {
+						optionList[i].PpdbRegistration[j].AcceptedStatus = 3
+						optIdx = len(optionList) - 1
+						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 2
+						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
 					}
 
 					if optIdx == -1 || optIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan

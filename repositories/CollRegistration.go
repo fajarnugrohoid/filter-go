@@ -27,12 +27,29 @@ func GetRegistrations(ctx context.Context, database *mongo.Database, firstChoice
 	result := make([]models.PpdbRegistration, 0)
 	for csr.Next(ctx) {
 		var row models.PpdbRegistration
+
 		err := csr.Decode(&row)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		result = append(result, row)
+		tmp := models.PpdbRegistration{
+			Id:                 row.Id,
+			Name:               row.Name,
+			FirstChoiceOption:  row.FirstChoiceOption,
+			SecondChoiceOption: row.SecondChoiceOption,
+			ThirdChoiceOption:  row.ThirdChoiceOption,
+			Score:              row.Score,
+			Distance:           row.Distance1,
+			Distance1:          row.Distance1,
+			Distance2:          row.Distance2,
+			Distance3:          row.Distance3,
+			BirthDate:          row.BirthDate,
+			AcceptedStatus:     0,
+			AcceptedIndex:      0,
+		}
+
+		result = append(result, tmp)
 	}
 	return result
 }

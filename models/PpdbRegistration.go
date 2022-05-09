@@ -14,6 +14,8 @@ type PpdbRegistration struct {
 	Score              float64            `bson:"score,omitempty"`
 	Distance           float64
 	Distance1          float64            `bson:"distance1,omitempty"`
+	Distance2          float64            `bson:"distance2,omitempty"`
+	Distance3          float64            `bson:"distance3,omitempty"`
 	BirthDate          primitive.DateTime `bson:"birth_date,omitempty"`
 	AcceptedStatus     int                `bson:"accepted_status"`
 	AcceptedIndex      int
@@ -35,8 +37,8 @@ func SortByDistanceAndAge(members []PpdbRegistration) {
 	sort.SliceStable(members, func(i, j int) bool {
 		mi, mj := members[i], members[j]
 		switch {
-		case mi.Distance1 != mj.Distance1:
-			return mi.Distance1 < mj.Distance1
+		case mi.Distance != mj.Distance:
+			return mi.Distance < mj.Distance
 		default:
 			return mi.BirthDate < mj.BirthDate
 		}
