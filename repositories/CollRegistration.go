@@ -36,6 +36,7 @@ func GetRegistrations(ctx context.Context, database *mongo.Database, firstChoice
 		tmp := models.PpdbRegistration{
 			Id:                 row.Id,
 			Name:               row.Name,
+			OptionType:         row.OptionType,
 			FirstChoiceOption:  row.FirstChoiceOption,
 			SecondChoiceOption: row.SecondChoiceOption,
 			ThirdChoiceOption:  row.ThirdChoiceOption,

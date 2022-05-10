@@ -19,10 +19,15 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 		//fmt.Println("ProcessFilter:", optionList[i].Id)
 		if optionList[i].Filtered == 0 {
 			SortByDistanceAndAge(optionList[i].PpdbRegistration)
-			/*
-				fmt.Println(optionList[i].Id, " - ", optionList[i].Name,
-					" len.std:", len(optionList[i].PpdbRegistration),
-					" : q: ", optionList[i].Quota, " \n ") */
+
+			fmt.Println("afterSortByDistanceAndAge")
+			fmt.Println(optionList[i].Id, " - ", optionList[i].Name,
+				" len.std:", len(optionList[i].PpdbRegistration),
+				" : q: ", optionList[i].Quota, " \n ")
+			for y, std := range optionList[i].PpdbRegistration {
+				fmt.Println("", y, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
+					" AcceptedIndex: ", std.AcceptedIndex)
+			}
 
 			if len(optionList[i].PpdbRegistration) > optionList[i].Quota { //cek jml pendaftar lebih dari quota sekolah
 
@@ -94,6 +99,9 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 					} else {
 						fmt.Println(optionList[i].PpdbRegistration[j].Name, "-idx:", optIdx)
 						optionList[optIdx].AddStd(optionList[i].PpdbRegistration[j])
+
+						optionList[i].AddHistory(optionList[i].PpdbRegistration[j], optIdx)
+
 						optionList[i].RemoveStd(j)
 						j--
 

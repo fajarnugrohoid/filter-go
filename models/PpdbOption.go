@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,6 +20,7 @@ type PpdbOption struct {
 	PpdbSchool          PpdbSchool `bson:"ppdb_schools,omitempty"`
 	PpdbRegistration    []PpdbRegistration
 	RegistrationHistory []PpdbRegistration
+	HistoryShifting     []PpdbRegistration
 }
 
 func (ppdbOption PpdbOption) addItem(options []PpdbOption) []PpdbOption {
@@ -26,10 +28,35 @@ func (ppdbOption PpdbOption) addItem(options []PpdbOption) []PpdbOption {
 }
 
 func (option *PpdbOption) AddStd(item PpdbRegistration) {
+	fmt.Println("addStd:", item.Name)
 	option.PpdbRegistration = append(option.PpdbRegistration, item)
 }
 func (option *PpdbOption) RemoveStd(i int) {
+	fmt.Println("RemoveStd:", option.PpdbRegistration[i].Name)
 	option.PpdbRegistration = append(option.PpdbRegistration[:i], option.PpdbRegistration[i+1:]...)
+}
+
+func (option *PpdbOption) AddHistory(item PpdbRegistration, accIndex int) {
+	item.AcceptedIndex = accIndex
+
+	var isExist = false
+	var stdIdx int
+	for i := 0; i < len(option.HistoryShifting); i++ {
+		if option.HistoryShifting[i].Id.String() == item.Id.String() {
+			isExist = true
+			stdIdx = i
+			break
+		}
+	}
+	if isExist == true {
+		option.HistoryShifting[stdIdx].AcceptedIndex = accIndex
+	} else {
+		option.HistoryShifting = append(option.HistoryShifting, item)
+	}
+
+}
+func (option *PpdbOption) RemoveHistory(i int) {
+	option.HistoryShifting = append(option.HistoryShifting[:i], option.HistoryShifting[i+1:]...)
 }
 
 func FindIndex(element primitive.ObjectID, data []*PpdbOption) int {
@@ -43,8 +70,19 @@ func FindIndex(element primitive.ObjectID, data []*PpdbOption) int {
 }
 
 func FindIndexStudent(element primitive.ObjectID, data []PpdbRegistration) int {
+
 	for k, v := range data {
 		//fmt.Println("element:", element.String(), "==", v.Id.String(), " - ", v.Name)
+		if element.String() == v.Id.String() {
+			return k
+		}
+	}
+	return -1 //not found.
+}
+func FindIndexStudentTest(element primitive.ObjectID, data []PpdbRegistration) int {
+
+	for k, v := range data {
+		fmt.Println("element:", element.String(), "==", v.Id.String(), " - ", v.Name)
 		if element.String() == v.Id.String() {
 			return k
 		}

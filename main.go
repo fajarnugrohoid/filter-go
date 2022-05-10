@@ -85,6 +85,7 @@ func main() {
 			NeedQuotaFirstOpt:   0,
 			PpdbRegistration:    studentRegistrations,
 			RegistrationHistory: studentHistories,
+			HistoryShifting:     make([]models.PpdbRegistration, 0),
 		}
 		tmpOptKetm := &models.PpdbOption{
 			Id:                  opt.Id,
@@ -97,6 +98,7 @@ func main() {
 			NeedQuotaFirstOpt:   0,
 			PpdbRegistration:    studentRegistrations,
 			RegistrationHistory: studentHistories,
+			HistoryShifting:     make([]models.PpdbRegistration, 0),
 		}
 		tmpKondisiTertentu := &models.PpdbOption{
 			Id:                  opt.Id,
@@ -109,6 +111,7 @@ func main() {
 			NeedQuotaFirstOpt:   0,
 			PpdbRegistration:    studentRegistrations,
 			RegistrationHistory: studentHistories,
+			HistoryShifting:     make([]models.PpdbRegistration, 0),
 		}
 		//ppdbOptions = append(ppdbOptions, tmpOpt)
 		//optionTypes["abk"] = append(optionTypes["abk"], tmpOpt)
@@ -132,24 +135,41 @@ func main() {
 		//	ppdbOptions[i].ppdbRegistration = studentRegistrations
 	}
 
-	TmpIdKetm, err := primitive.ObjectIDFromHex("000000000000000000000001")
-	TmpIdKondisiTertentu, err := primitive.ObjectIDFromHex("000000000000000000000002")
+	TmpIdAbk, err := primitive.ObjectIDFromHex("000000000000000000000001")
+	TmpIdKetm, err := primitive.ObjectIDFromHex("000000000000000000000002")
+	TmpIdKondisiTertentu, err := primitive.ObjectIDFromHex("000000000000000000000003")
+
+	tmpAbk := &models.PpdbOption{
+		Id:                  TmpIdAbk,
+		Name:                "TemporaryAbk",
+		Quota:               0,
+		Filtered:            1,
+		UpdateQuota:         false,
+		PpdbRegistration:    nil,
+		RegistrationHistory: nil,
+		HistoryShifting:     nil,
+	}
 	tmpKetm := &models.PpdbOption{
-		Id:               TmpIdKetm,
-		Name:             "TemporaryKetm",
-		Quota:            0,
-		Filtered:         1,
-		UpdateQuota:      false,
-		PpdbRegistration: nil,
+		Id:                  TmpIdKetm,
+		Name:                "TemporaryKetm",
+		Quota:               0,
+		Filtered:            1,
+		UpdateQuota:         false,
+		PpdbRegistration:    nil,
+		RegistrationHistory: nil,
+		HistoryShifting:     nil,
 	}
 	tmpKondisiTertentu := &models.PpdbOption{
-		Id:               TmpIdKondisiTertentu,
-		Name:             "TemporaryKondisiTertentu",
-		Quota:            0,
-		Filtered:         1,
-		UpdateQuota:      false,
-		PpdbRegistration: nil,
+		Id:                  TmpIdKondisiTertentu,
+		Name:                "TemporaryKondisiTertentu",
+		Quota:               0,
+		Filtered:            1,
+		UpdateQuota:         false,
+		PpdbRegistration:    nil,
+		RegistrationHistory: nil,
+		HistoryShifting:     nil,
 	}
+	optionTypes["abk"] = append(optionTypes["abk"], tmpAbk)
 	optionTypes["ketm"] = append(optionTypes["ketm"], tmpKetm)
 	optionTypes["kondisi-tertentu"] = append(optionTypes["kondisi-tertentu"], tmpKondisiTertentu)
 
@@ -203,6 +223,12 @@ func main() {
 		for i, std := range optionTypes["ketm"][i].PpdbRegistration {
 			fmt.Println(">", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance: ", std.Distance, " Birth:", std.BirthDate)
 		}
+		for i, std := range optionTypes["ketm"][i].RegistrationHistory {
+			fmt.Println("hist>", i, ":", std.Name, " - acc:", std.AcceptedIndex)
+		}
+		for i, std := range optionTypes["ketm"][i].HistoryShifting {
+			fmt.Println("shift>", i, ":", std.Name, " - acc:", std.AcceptedIndex)
+		}
 	}
 	for i := 0; i < len(optionTypes["kondisi-tertentu"]); i++ {
 		fmt.Println(i, "-", optionTypes["kondisi-tertentu"][i].Id, " - ", optionTypes["kondisi-tertentu"][i].Name,
@@ -213,7 +239,8 @@ func main() {
 		)
 	}
 
-	//repositories.InsertFiltered(ctx, database, ppdbOptions)
+	repositories.InsertFiltered(ctx, database, optionTypes["ketm"], "ketm")
+	repositories.InsertFiltered(ctx, database, optionTypes["kondisi-tertentu"], "kondisi-tertentu")
 	timeElapsed := time.Since(start)
 	fmt.Printf("The `for` loop took %s", timeElapsed)
 }

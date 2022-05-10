@@ -4,10 +4,13 @@ import (
 	"context"
 	"filterisasi/models"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions []models.PpdbOption) {
+func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions []*models.PpdbOption, option_type string) {
+
+	DeleteFilteredByOptionType(ctx, database, option_type)
 
 	newValue := make([]interface{}, len(ppdbOptions))
 	for _, v := range ppdbOptions {
@@ -45,4 +48,21 @@ func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions [
 	}
 	// display the ids of the newly inserted objects
 	fmt.Println(results.InsertedIDs)
+}
+
+func DeleteFilteredByOptionType(ctx context.Context, database *mongo.Database, option_type string) {
+	//persons := []interface{}{}
+
+	f := bson.M{"option_type": bson.M{"$eq": option_type}}
+
+	/*
+		for i := 0; i < len(ppdbOptions); i++ {
+			for _, v := range ppdbOptions[i].PpdbRegistration {
+				persons = append(persons, v.AcceptedStatus)
+			}
+		}*/
+	_, err := database.Collection("ppdb_filtereds").DeleteMany(ctx, f)
+	if err != nil {
+		panic(err)
+	}
 }

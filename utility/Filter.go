@@ -166,6 +166,8 @@ func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string,
 
 func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt int) []*models.PpdbOption {
 	fmt.Println("currTargetIdxOpt:", currTargetIdxOpt)
+	//pull student from backup history pilihan 1
+	var listPullOpt = make([]int, 0)
 	for j := 0; j < len(optionList[currTargetIdxOpt].RegistrationHistory); j++ {
 		if optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus != 0 {
 
@@ -200,12 +202,63 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
 			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)
+			j--
 			if nextTargetIdxOpt != len(optionList)-1 {
 				optionList[nextTargetIdxOpt].Filtered = 0
-				return PullStudentToFirstChoice(optionList, nextTargetIdxOpt)
+				listPullOpt = append(listPullOpt, nextTargetIdxOpt)
 			}
-			j--
+
 		}
+	}
+
+	//pull student from history shifting
+	for j := 0; j < len(optionList[currTargetIdxOpt].HistoryShifting); j++ {
+		var levelAcc int
+		if optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption.String() ==
+			optionList[currTargetIdxOpt].Id.String() {
+			levelAcc = 0
+		} else if optionList[currTargetIdxOpt].HistoryShifting[j].SecondChoiceOption.String() ==
+			optionList[currTargetIdxOpt].Id.String() {
+			levelAcc = 1
+		} else if optionList[currTargetIdxOpt].HistoryShifting[j].ThirdChoiceOption.String() ==
+			optionList[currTargetIdxOpt].Id.String() {
+			levelAcc = 2
+		} else {
+			levelAcc = 3
+		}
+
+		//idxStd := models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+
+		optIdxFirstChoice := models.FindIndex(optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption, optionList)
+		stdIdx := models.FindIndexStudent(optionList[currTargetIdxOpt].HistoryShifting[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
+		fmt.Println("shifting name :", optionList[currTargetIdxOpt].HistoryShifting[j].Name)
+		fmt.Println("optIdxFirstChoice:", optionList[optIdxFirstChoice].Name, " stdIdx:", stdIdx)
+
+		if optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus > levelAcc {
+			fmt.Println("levelAcc:", levelAcc)
+			nextTargetIdxOpt := optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex
+			fmt.Println("nextTargetIdxOpt.len:", len(optionList[nextTargetIdxOpt].PpdbRegistration))
+			targetIdxStd := models.FindIndexStudentTest(optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+			fmt.Println("nextTargetIdxOpt:", nextTargetIdxOpt, " ", optionList[nextTargetIdxOpt].Name, " targetIdxStd:", targetIdxStd)
+
+			for f := 0; f < len(optionList[nextTargetIdxOpt].PpdbRegistration); f++ {
+				fmt.Println("cek:", optionList[nextTargetIdxOpt].PpdbRegistration[f].Name)
+			}
+			fmt.Println("\n")
+
+			optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = levelAcc
+			optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = currTargetIdxOpt
+			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = levelAcc
+			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
+
+			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
+			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)
+
+		}
+	}
+
+	for i := 0; i < len(listPullOpt); i++ {
+		optionList = PullStudentToFirstChoice(optionList, listPullOpt[i])
 	}
 
 	return optionList
@@ -242,4 +295,15 @@ func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, optTy
 	//fmt.Println(data)
 
 	return data
+}
+
+func Filter2OptionsShareQuotaSingleGoroutine(optionTypes map[string][]*models.PpdbOption, optType string, loop int) []*models.PpdbOption {
+
+	fmt.Println("Filter2OptionsShareQuota")
+
+	ppdbOptions := models.ProcessFilter(optionTypes[optType], true, loop)
+
+	fmt.Println("close messages")
+
+	return ppdbOptions
 }
