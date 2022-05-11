@@ -47,7 +47,8 @@ func GetRegistrations(ctx context.Context, database *mongo.Database, firstChoice
 			Distance3:          row.Distance3,
 			BirthDate:          row.BirthDate,
 			AcceptedStatus:     0,
-			AcceptedIndex:      0,
+			AcceptedIndex:      0, //perlu di update idx berapa untuk firstchoice
+			AcceptedChoiceId:   row.FirstChoiceOption,
 		}
 
 		result = append(result, tmp)

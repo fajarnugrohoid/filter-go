@@ -5,7 +5,10 @@ import (
 	"filterisasi/models"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
 func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions []*models.PpdbOption, option_type string) {
@@ -65,4 +68,93 @@ func DeleteFilteredByOptionType(ctx context.Context, database *mongo.Database, o
 	if err != nil {
 		panic(err)
 	}
+}
+
+func GetFiltereds(ctx context.Context, database *mongo.Database, optionType string) []models.PpdbFiltered {
+
+	//var optId = [1]primitive.ObjectID{firstChoice}
+	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
+	criteria := bson.M{"option_type": optionType, "registration_level": "sma"}
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"distance1", 1}})
+
+	csr, err := database.Collection("ppdb_filtered").Find(ctx, criteria, findOptions)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer csr.Close(ctx)
+
+	result := make([]models.PpdbFiltered, 0)
+	for csr.Next(ctx) {
+		var row models.PpdbFiltered
+
+		err := csr.Decode(&row)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		tmp := models.PpdbFiltered{
+			Id:                 row.Id,
+			Name:               row.Name,
+			OptionType:         row.OptionType,
+			FirstChoiceOption:  row.FirstChoiceOption,
+			SecondChoiceOption: row.SecondChoiceOption,
+			ThirdChoiceOption:  row.ThirdChoiceOption,
+			Score:              row.Score,
+			Distance:           row.Distance1,
+			Distance1:          row.Distance1,
+			Distance2:          row.Distance2,
+			Distance3:          row.Distance3,
+			BirthDate:          row.BirthDate,
+			AcceptedStatus:     0,
+			AcceptedIndex:      0,
+		}
+
+		result = append(result, tmp)
+	}
+	return result
+}
+
+func GetFilteredsByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []models.PpdbFiltered {
+
+	//var optId = [1]primitive.ObjectID{firstChoice}
+	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
+	criteria := bson.M{"option_type": optionType, "accepted_choice_id": optId}
+	findOptions := options.Find()
+
+	csr, err := database.Collection("ppdb_filtereds").Find(ctx, criteria, findOptions)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer csr.Close(ctx)
+
+	result := make([]models.PpdbFiltered, 0)
+	for csr.Next(ctx) {
+		var row models.PpdbFiltered
+
+		err := csr.Decode(&row)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		tmp := models.PpdbFiltered{
+			Id:                 row.Id,
+			Name:               row.Name,
+			OptionType:         row.OptionType,
+			FirstChoiceOption:  row.FirstChoiceOption,
+			SecondChoiceOption: row.SecondChoiceOption,
+			ThirdChoiceOption:  row.ThirdChoiceOption,
+			Score:              row.Score,
+			Distance:           row.Distance1,
+			Distance1:          row.Distance1,
+			Distance2:          row.Distance2,
+			Distance3:          row.Distance3,
+			BirthDate:          row.BirthDate,
+			AcceptedStatus:     0,
+			AcceptedIndex:      0,
+		}
+
+		result = append(result, tmp)
+	}
+	return result
 }

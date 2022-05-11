@@ -22,7 +22,7 @@ func main() {
 
 	logger := logrus.New()
 
-	file, _ := os.OpenFile("application.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, _ := os.OpenFile("application.log", os.O_RDWR|os.O_CREATE|os.O_WRONLY, 0666)
 
 	err := godotenv.Load("local.env")
 	if err != nil {
@@ -142,6 +142,7 @@ func main() {
 	tmpAbk := &models.PpdbOption{
 		Id:                  TmpIdAbk,
 		Name:                "TemporaryAbk",
+		Type:                "abk",
 		Quota:               0,
 		Filtered:            1,
 		UpdateQuota:         false,
@@ -152,6 +153,7 @@ func main() {
 	tmpKetm := &models.PpdbOption{
 		Id:                  TmpIdKetm,
 		Name:                "TemporaryKetm",
+		Type:                "ketm",
 		Quota:               0,
 		Filtered:            1,
 		UpdateQuota:         false,
@@ -162,6 +164,7 @@ func main() {
 	tmpKondisiTertentu := &models.PpdbOption{
 		Id:                  TmpIdKondisiTertentu,
 		Name:                "TemporaryKondisiTertentu",
+		Type:                "kondisi-tertentu",
 		Quota:               0,
 		Filtered:            1,
 		UpdateQuota:         false,
@@ -213,6 +216,7 @@ func main() {
 		}
 	*/
 
+	ppdbStatistics := make([]models.PpdbStatistic, 0)
 	for i := 0; i < len(optionTypes["ketm"]); i++ {
 		fmt.Println(i, "-", optionTypes["ketm"][i].Id, " - ", optionTypes["ketm"][i].Name,
 			" : q: ", optionTypes["ketm"][i].Quota,
@@ -221,7 +225,10 @@ func main() {
 			" - AddQuota:", optionTypes["ketm"][i].AddQuota,
 		)
 		for i, std := range optionTypes["ketm"][i].PpdbRegistration {
-			fmt.Println(">", i, ":", std.Name, " - acc:", std.AcceptedStatus, " distance: ", std.Distance, " Birth:", std.BirthDate)
+			fmt.Println(">", i, ":", std.Name,
+				" - acc:", std.AcceptedStatus,
+				" - accId:", std.AcceptedChoiceId,
+				" distance: ", std.Distance, " Birth:", std.BirthDate)
 		}
 		for i, std := range optionTypes["ketm"][i].RegistrationHistory {
 			fmt.Println("hist>", i, ":", std.Name, " - acc:", std.AcceptedIndex)
@@ -229,6 +236,22 @@ func main() {
 		for i, std := range optionTypes["ketm"][i].HistoryShifting {
 			fmt.Println("shift>", i, ":", std.Name, " - acc:", std.AcceptedIndex)
 		}
+
+		var pg float64
+		if len(optionTypes["ketm"][i].PpdbRegistration) > 0 {
+			pg = optionTypes["ketm"][i].PpdbRegistration[len(optionTypes["ketm"][i].PpdbRegistration)-1].Distance
+		} else {
+			pg = 0
+		}
+		tmpStatistic := models.PpdbStatistic{
+			Id:         optionTypes["ketm"][i].Id,
+			Name:       optionTypes["ketm"][i].Name,
+			OptionType: optionTypes["ketm"][i].Type,
+			Quota:      optionTypes["ketm"][i].Quota,
+			SchoolId:   optionTypes["ketm"][i].SchoolId,
+			Pg:         pg,
+		}
+		ppdbStatistics = append(ppdbStatistics, tmpStatistic)
 	}
 	for i := 0; i < len(optionTypes["kondisi-tertentu"]); i++ {
 		fmt.Println(i, "-", optionTypes["kondisi-tertentu"][i].Id, " - ", optionTypes["kondisi-tertentu"][i].Name,
@@ -241,6 +264,7 @@ func main() {
 
 	repositories.InsertFiltered(ctx, database, optionTypes["ketm"], "ketm")
 	repositories.InsertFiltered(ctx, database, optionTypes["kondisi-tertentu"], "kondisi-tertentu")
+	repositories.InsertStatistic(ctx, database, ppdbStatistics, "ketm")
 	timeElapsed := time.Since(start)
 	fmt.Printf("The `for` loop took %s", timeElapsed)
 }
