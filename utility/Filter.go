@@ -196,15 +196,16 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				)
 			}
 
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = 0
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
-			optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus = 0
-			optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex = currTargetIdxOpt
-			optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
-
-			//models.PpdbOptionList.UpdateStudent(currTargetIdxOpt, nextTargetIdxOpt, targetIdxStd, j)
+			/*
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = 0
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
+				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus = 0
+				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex = currTargetIdxOpt
+				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
+			*/
+			models.UpdatePullStudent(optionList, currTargetIdxOpt, nextTargetIdxOpt, targetIdxStd, j)
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
 			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)

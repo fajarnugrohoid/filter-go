@@ -89,3 +89,13 @@ func FindIndexStudentTest(element primitive.ObjectID, data []PpdbRegistration) i
 	}
 	return -1 //not found.
 }
+
+func UpdatePullStudent(optionList []*PpdbOption, currTargetIdxOpt int, nextTargetIdxOpt int, targetIdxStd int, idxHistory int) {
+	optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = 0
+	optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
+	optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
+	optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
+	optionList[currTargetIdxOpt].RegistrationHistory[idxHistory].AcceptedStatus = 0
+	optionList[currTargetIdxOpt].RegistrationHistory[idxHistory].AcceptedIndex = currTargetIdxOpt
+	optionList[currTargetIdxOpt].RegistrationHistory[idxHistory].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
+}

@@ -12,122 +12,159 @@ func (optionList *PpdbOptionList) AddOpt(item PpdbOption) {
 	optionList.options = append(optionList.options, item)
 }
 
-func (optionList *PpdbOptionList) UpdateStudent(currTargetIdxOpt int, nextTargetIdxOpt int, targetIdxStd int, j int) {
-	optionList.options[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = 0
-	optionList.options[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
-	optionList.options[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedChoiceId = optionList.options[currTargetIdxOpt].Id
-	optionList.options[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList.options[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
-	optionList.options[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus = 0
-	optionList.options[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex = currTargetIdxOpt
-	optionList.options[currTargetIdxOpt].RegistrationHistory[j].AcceptedChoiceId = optionList.options[currTargetIdxOpt].Id
-}
-
 func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOption {
-	var optIdx int
-	var stdIdx int
-	for i := 0; i < len(optionList); i++ {
+	var nextOptIdx int
+	var histIdxStd int
+	for curOptIdx := 0; curOptIdx < len(optionList); curOptIdx++ {
 		//fmt.Println("ProcessFilter:", optionList[i].Id)
-		if optionList[i].Filtered == 0 {
-			SortByDistanceAndAge(optionList[i].PpdbRegistration)
+		if optionList[curOptIdx].Filtered == 0 {
+			SortByDistanceAndAge(optionList[curOptIdx].PpdbRegistration)
 
 			fmt.Println("afterSortByDistanceAndAge")
-			fmt.Println(optionList[i].Id, " - ", optionList[i].Name,
-				" len.std:", len(optionList[i].PpdbRegistration),
-				" : q: ", optionList[i].Quota, " \n ")
-			for y, std := range optionList[i].PpdbRegistration {
+			fmt.Println(optionList[curOptIdx].Id, " - ", optionList[curOptIdx].Name,
+				" len.std:", len(optionList[curOptIdx].PpdbRegistration),
+				" : q: ", optionList[curOptIdx].Quota, " \n ")
+			for y, std := range optionList[curOptIdx].PpdbRegistration {
 				fmt.Println("", y, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
 					" AccIdx: ", std.AcceptedIndex,
 					" AccId: ", std.AcceptedChoiceId,
 				)
 			}
 
-			if len(optionList[i].PpdbRegistration) > optionList[i].Quota { //cek jml pendaftar lebih dari quota sekolah
+			if len(optionList[curOptIdx].PpdbRegistration) > optionList[curOptIdx].Quota { //cek jml pendaftar lebih dari quota sekolah
 
-				if optionList[i].UpdateQuota == true {
-					optionList[i].NeedQuotaFirstOpt = (len(optionList[i].PpdbRegistration) - optionList[i].Quota)
-					optionList[i].UpdateQuota = false
+				if optionList[curOptIdx].UpdateQuota == true {
+					optionList[curOptIdx].NeedQuotaFirstOpt = (len(optionList[curOptIdx].PpdbRegistration) - optionList[curOptIdx].Quota)
+					optionList[curOptIdx].UpdateQuota = false
 				}
-				fmt.Println(optionList[i].Name, " NeedQuotaFirstOpt:", optionList[i].NeedQuotaFirstOpt)
+				fmt.Println(optionList[curOptIdx].Name, " NeedQuotaFirstOpt:", optionList[curOptIdx].NeedQuotaFirstOpt)
 
 				x := 0
-				for j := optionList[i].Quota; j < len(optionList[i].PpdbRegistration); j++ { ////cut siswa yg lebih dari quota move to sec, third choice
+				for curIdxStd := optionList[curOptIdx].Quota; curIdxStd < len(optionList[curOptIdx].PpdbRegistration); curIdxStd++ { ////cut siswa yg lebih dari quota move to sec, third choice
 
-					optIdxFirstChoice := FindIndex(optionList[i].PpdbRegistration[j].FirstChoiceOption, optionList)
-					stdIdx = FindIndexStudent(optionList[i].PpdbRegistration[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
+					firstOptIdx := FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].FirstChoiceOption, optionList)
+					histIdxStd = FindIndexStudent(optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, optionList[firstOptIdx].RegistrationHistory)
 					fmt.Println(x, "-findIdxStd:",
-						optionList[i].Name, "-",
-						optionList[i].PpdbRegistration[j].Id, "-",
-						optionList[i].PpdbRegistration[j].Name,
-						" - ", optIdxFirstChoice,
-						" - ", optionList[optIdxFirstChoice].Name,
-						" - ", stdIdx,
-						" - AcceptedStatus:", optionList[i].PpdbRegistration[j].AcceptedStatus,
+						optionList[curOptIdx].Name, "-",
+						optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, "-",
+						optionList[curOptIdx].PpdbRegistration[curIdxStd].Name,
+						" - ", firstOptIdx,
+						" - ", optionList[firstOptIdx].Name,
+						" - ", histIdxStd,
+						" - AcceptedStatus:", optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus,
 					)
 
-					/*
-						for x, std := range optionList[optIdxFirstChoice].RegistrationHistory {
-							fmt.Println(">hist3:", x, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
-								" AcceptedIndex: ", std.AcceptedIndex)
+					if optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus == 0 {
+
+						nextOptIdx = FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, optionList)
+
+						/*
+							optionList[i].PpdbRegistration[j].AcceptedStatus = 1
+							optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
+							optionList[i].PpdbRegistration[j].Distance = optionList[i].PpdbRegistration[j].Distance2
+							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedStatus = 1
+							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedIndex = optIdx
+							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
+						*/
+						//UpdateMoveStudent(optionList, curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 1)
+						dataChange := &DataChange{
+							curOptIdx:     curOptIdx,
+							nextOptIdx:    nextOptIdx,
+							firstOptIdx:   firstOptIdx,
+							curIdxStd:     curIdxStd,
+							histIdxStd:    histIdxStd,
+							accStatus:     1,
+							NextOptChoice: optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption,
+							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance2,
 						}
-						fmt.Println("\n") */
+						dataChange.UpdateMoveStudent(optionList)
+						fmt.Println("          >sec ori:", curIdxStd, ":",
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-",
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].Name, "-",
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ",
+							nextOptIdx)
 
-					if optionList[i].PpdbRegistration[j].AcceptedStatus == 0 {
-						optionList[i].PpdbRegistration[j].AcceptedStatus = 1
-						optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
-						optionList[i].PpdbRegistration[j].Distance = optionList[i].PpdbRegistration[j].Distance2
+					} else if optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus == 1 {
 
-						optIdx = FindIndex(optionList[i].PpdbRegistration[j].SecondChoiceOption, optionList)
+						nextOptIdx = FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].ThirdChoiceOption, optionList)
+						/*
+							optionList[i].PpdbRegistration[j].AcceptedStatus = 2
+							optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
+							optionList[i].PpdbRegistration[j].Distance = optionList[i].PpdbRegistration[j].Distance3
 
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 1
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
-						fmt.Println("          >sec ori:", j, ":",
-							optionList[i].PpdbRegistration[j].Name, "-",
-							optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Name, "-",
-							optionList[i].PpdbRegistration[j].SecondChoiceOption, " - ",
-							optIdx)
-					} else if optionList[i].PpdbRegistration[j].AcceptedStatus == 1 {
-						optionList[i].PpdbRegistration[j].AcceptedStatus = 2
-						optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
-						optionList[i].PpdbRegistration[j].Distance = optionList[i].PpdbRegistration[j].Distance3
-
-						optIdx = FindIndex(optionList[i].PpdbRegistration[j].ThirdChoiceOption, optionList)
-
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 2
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
-						fmt.Println("          >third ori:", j, ":", optionList[i].PpdbRegistration[j].Name, "-", optionList[i].PpdbRegistration[j].SecondChoiceOption, " - ", optIdx)
+							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedStatus = 2
+							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
+							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
+						*/
+						// curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 2
+						dataChange := &DataChange{
+							curOptIdx:     curOptIdx,
+							nextOptIdx:    nextOptIdx,
+							firstOptIdx:   firstOptIdx,
+							curIdxStd:     curIdxStd,
+							histIdxStd:    histIdxStd,
+							accStatus:     2,
+							NextOptChoice: optionList[curOptIdx].PpdbRegistration[curIdxStd].ThirdChoiceOption,
+							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
+						}
+						dataChange.UpdateMoveStudent(optionList)
+						fmt.Println("          >third ori:", curIdxStd, ":", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ", nextOptIdx)
 					} else {
-						optionList[i].PpdbRegistration[j].AcceptedStatus = 3
-
-						optIdx = len(optionList) - 1
-						optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[optIdx].Id
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 3
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = optIdx
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedChoiceId = optionList[optIdx].Id
+						nextOptIdx = len(optionList) - 1
+						/*
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus = 3
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedChoiceId = optionList[nextOptIdx].Id
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedStatus = 3
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[nextOptIdx].Id
+						*/
+						dataChange := &DataChange{
+							curOptIdx:     curOptIdx,
+							nextOptIdx:    nextOptIdx,
+							firstOptIdx:   firstOptIdx,
+							curIdxStd:     curIdxStd,
+							histIdxStd:    histIdxStd,
+							accStatus:     3,
+							NextOptChoice: optionList[nextOptIdx].Id,
+							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
+						}
+						dataChange.UpdateMoveStudent(optionList)
 					}
 
-					if optIdx == -1 || optIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
-						fmt.Println("in if -1 idx:", optIdx, "-", optionList[i].PpdbRegistration[j].Name, "-", len(optionList)-1)
-						optionList[i].PpdbRegistration[j].AcceptedStatus = 3
-						optionList[i].PpdbRegistration[j].AcceptedIndex = len(optionList) - 1
-						optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[len(optionList)-1].Id
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = 3
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = len(optionList) - 1
-						optionList[len(optionList)-1].AddStd(optionList[i].PpdbRegistration[j])
-						optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedChoiceId = optionList[len(optionList)-1].Id
-						optionList[i].RemoveStd(j)
-						j--
+					if nextOptIdx == -1 || nextOptIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
+						fmt.Println("in if -1 idx:", nextOptIdx, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", len(optionList)-1)
+						nextOptIdx = len(optionList) - 1
+						/*
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus = 3
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedIndex = nextOptIdx
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedChoiceId = optionList[nextOptIdx].Id
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedStatus = 3
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
+							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[len(optionList)-1].Id
+						*/
+						dataChange := &DataChange{
+							curOptIdx:     curOptIdx,
+							nextOptIdx:    nextOptIdx,
+							firstOptIdx:   firstOptIdx,
+							curIdxStd:     curIdxStd,
+							histIdxStd:    histIdxStd,
+							accStatus:     3,
+							NextOptChoice: optionList[nextOptIdx].Id,
+							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
+						}
+						dataChange.UpdateMoveStudent(optionList)
+
+						optionList[len(optionList)-1].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
+						optionList[curOptIdx].RemoveStd(curIdxStd)
+						curIdxStd--
 					} else {
-						fmt.Println(optionList[i].PpdbRegistration[j].Name, "-idx:", optIdx)
-						optionList[optIdx].AddStd(optionList[i].PpdbRegistration[j])
+						fmt.Println(optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-idx:", nextOptIdx)
+						optionList[nextOptIdx].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
+						optionList[curOptIdx].AddHistory(optionList[curOptIdx].PpdbRegistration[curIdxStd], nextOptIdx)
+						optionList[curOptIdx].RemoveStd(curIdxStd)
+						curIdxStd--
 
-						optionList[i].AddHistory(optionList[i].PpdbRegistration[j], optIdx)
-
-						optionList[i].RemoveStd(j)
-						j--
-
-						optionList[optIdx].Filtered = 0
+						optionList[nextOptIdx].Filtered = 0
 						status = true
 
 					}
@@ -135,7 +172,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 				}
 
 			}
-			optionList[i].Filtered = 1
+			optionList[curOptIdx].Filtered = 1
 		}
 	}
 
