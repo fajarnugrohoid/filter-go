@@ -2,7 +2,7 @@ package models
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-type DataChange struct {
+type StudentUpdate struct {
 	curOptIdx     int
 	nextOptIdx    int
 	firstOptIdx   int
@@ -13,7 +13,7 @@ type DataChange struct {
 	Distance      float64
 }
 
-func (d *DataChange) UpdateMoveStudent(optionList []*PpdbOption) {
+func (d *StudentUpdate) UpdateMoveStudent(optionList []*PpdbOption) {
 	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedStatus = d.accStatus
 	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedChoiceId = optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].SecondChoiceOption
 	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].Distance = d.Distance

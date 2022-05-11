@@ -67,7 +67,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
 						*/
 						//UpdateMoveStudent(optionList, curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 1)
-						dataChange := &DataChange{
+						dataChange := &StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -97,7 +97,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
 						*/
 						// curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 2
-						dataChange := &DataChange{
+						dataChange := &StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -118,7 +118,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[nextOptIdx].Id
 						*/
-						dataChange := &DataChange{
+						dataChange := &StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -142,7 +142,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[len(optionList)-1].Id
 						*/
-						dataChange := &DataChange{
+						dataChange := &StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
