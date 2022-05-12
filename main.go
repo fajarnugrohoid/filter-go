@@ -4,7 +4,6 @@ import (
 	"context"
 	"filterisasi/models"
 	"filterisasi/repositories"
-	"filterisasi/utility"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -204,7 +203,7 @@ func main() {
 		}*/
 	}
 
-	optionTypes = utility.DoFilter(optionTypes)
+	optionTypes = models.DoFilter(optionTypes)
 	/*
 		fmt.Println("===========================res-end==============================")
 		for _, opt := range optionTypes["ketm"] {

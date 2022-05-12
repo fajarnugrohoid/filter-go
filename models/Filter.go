@@ -1,7 +1,6 @@
-package utility
+package models
 
 import (
-	"filterisasi/models"
 	"fmt"
 	"runtime"
 )
@@ -55,7 +54,7 @@ func (ppdbOptions *models.PpdbOptionList) ProcessFilter(status bool) []models.Pp
 	return ppdbOptions
 } */
 
-func DoFilter(optionTypes map[string][]*models.PpdbOption) map[string][]*models.PpdbOption {
+func DoFilter(optionTypes map[string][]*PpdbOption) map[string][]*PpdbOption {
 	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 0)
 	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 0)
 
@@ -98,7 +97,7 @@ func DoFilter(optionTypes map[string][]*models.PpdbOption) map[string][]*models.
 	return optionTypes
 }
 
-func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, reFilter bool) (map[string][]*models.PpdbOption, bool) {
+func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, targetType string, reFilter bool) (map[string][]*PpdbOption, bool) {
 	fmt.Println("===========================need quota==============================")
 
 	for i := 0; i < len(optionTypes[currentType]); i++ {
@@ -164,9 +163,10 @@ func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string,
 	return optionTypes, reFilter
 }
 
-func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt int) []*models.PpdbOption {
+func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int) []*PpdbOption {
 	fmt.Println("currTargetIdxOpt:", currTargetIdxOpt)
 	//pull student from backup history pilihan 1
+
 	var listPullOpt = make([]int, 0)
 	for j := 0; j < len(optionList[currTargetIdxOpt].RegistrationHistory); j++ {
 		if optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus != 0 {
@@ -175,7 +175,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			var nextTargetIdxOpt int
 			if optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex == -1 {
 				nextTargetIdxOpt = len(optionList) - 1
-				targetIdxStd = models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+				targetIdxStd = FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 
 				fmt.Println("Yg tidak diterima == :",
 					optionList[currTargetIdxOpt].RegistrationHistory[j].Id,
@@ -186,7 +186,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				)
 			} else {
 				nextTargetIdxOpt = optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex
-				targetIdxStd = models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+				targetIdxStd = FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 				fmt.Println("Yg tidak diterima !=:",
 					optionList[currTargetIdxOpt].RegistrationHistory[j].Id,
 					" - ", optionList[currTargetIdxOpt].RegistrationHistory[j].Name,
@@ -205,7 +205,16 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex = currTargetIdxOpt
 				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
 			*/
-			models.UpdatePullStudent(optionList, currTargetIdxOpt, nextTargetIdxOpt, targetIdxStd, j)
+			dataChange := StudentUpdate{
+				curOptIdx:     currTargetIdxOpt,
+				nextOptIdx:    nextTargetIdxOpt,
+				nextIdxStd:    targetIdxStd,
+				histIdxStd:    j,
+				accStatus:     0,
+				NextOptChoice: optionList[currTargetIdxOpt].Id,
+				Distance:      optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1,
+			}
+			UpdatePullStudentFirstChoice(optionList, dataChange)
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
 			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)
@@ -236,8 +245,8 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 
 		//idxStd := models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 
-		optIdxFirstChoice := models.FindIndex(optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption, optionList)
-		stdIdx := models.FindIndexStudent(optionList[currTargetIdxOpt].HistoryShifting[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
+		optIdxFirstChoice := FindIndex(optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption, optionList)
+		stdIdx := FindIndexStudent(optionList[currTargetIdxOpt].HistoryShifting[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
 		fmt.Println("shifting name :", optionList[currTargetIdxOpt].HistoryShifting[j].Name)
 		fmt.Println("optIdxFirstChoice:", optionList[optIdxFirstChoice].Name, " stdIdx:", stdIdx)
 
@@ -245,25 +254,43 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			fmt.Println("levelAcc:", levelAcc)
 			nextTargetIdxOpt := optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex
 			fmt.Println("nextTargetIdxOpt.len:", len(optionList[nextTargetIdxOpt].PpdbRegistration))
-			targetIdxStd := models.FindIndexStudentTest(optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+			targetIdxStd := FindIndexStudentTest(optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 			fmt.Println("nextTargetIdxOpt:", nextTargetIdxOpt, " ", optionList[nextTargetIdxOpt].Name, " targetIdxStd:", targetIdxStd)
 
-			optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = levelAcc
-			optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = currTargetIdxOpt
-			optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = levelAcc
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
-			optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
-
+			/*
+				optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = levelAcc
+				optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex = currTargetIdxOpt
+				optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedStatus = levelAcc
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedIndex = currTargetIdxOpt
+				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
+			*/
+			var tmpDistance float64
 			if levelAcc == 0 {
-				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
+				//optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
+				tmpDistance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1
 			} else if levelAcc == 1 {
-				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance2
+				//optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance2
+				tmpDistance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance2
 			} else if levelAcc == 2 {
-				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
+				//optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
+				tmpDistance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
 			} else {
-				optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
+				//optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
+				tmpDistance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
 			}
+
+			dataChange := StudentUpdate{
+				firstOptIdx:   optIdxFirstChoice,
+				accStatus:     levelAcc,
+				histIdxStd:    stdIdx,
+				curOptIdx:     currTargetIdxOpt,
+				nextOptIdx:    nextTargetIdxOpt,
+				nextIdxStd:    targetIdxStd,
+				NextOptChoice: optionList[currTargetIdxOpt].Id,
+				Distance:      tmpDistance,
+			}
+			UpdatePullStudentByChoice(optionList, dataChange)
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
 			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)
@@ -278,15 +305,15 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 	return optionList
 }
 
-func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, optType string, loop int) []*models.PpdbOption {
+func Filter2OptionsShareQuota(optionTypes map[string][]*PpdbOption, optType string, loop int) []*PpdbOption {
 
 	runtime.GOMAXPROCS(2)
-	var messages = make(chan []*models.PpdbOption)
+	var messages = make(chan []*PpdbOption)
 	fmt.Println("Filter2OptionsShareQuota")
 
-	var getFiltered = func(objs chan []*models.PpdbOption, option []*models.PpdbOption) {
+	var getFiltered = func(objs chan []*PpdbOption, option []*PpdbOption) {
 		fmt.Println("bef getFiltered:")
-		ppdbOptions := models.ProcessFilter(option, true, loop)
+		ppdbOptions := ProcessFilter(option, true, loop)
 		fmt.Println("aft getFiltered")
 		messages <- ppdbOptions
 	}
@@ -311,11 +338,11 @@ func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, optTy
 	return data
 }
 
-func Filter2OptionsShareQuotaSingleGoroutine(optionTypes map[string][]*models.PpdbOption, optType string, loop int) []*models.PpdbOption {
+func Filter2OptionsShareQuotaSingleGoroutine(optionTypes map[string][]*PpdbOption, optType string, loop int) []*PpdbOption {
 
 	fmt.Println("Filter2OptionsShareQuota")
 
-	ppdbOptions := models.ProcessFilter(optionTypes[optType], true, loop)
+	ppdbOptions := ProcessFilter(optionTypes[optType], true, loop)
 
 	fmt.Println("close messages")
 

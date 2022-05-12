@@ -5,11 +5,11 @@ import (
 )
 
 type PpdbOptionList struct {
-	options []PpdbOption
+	Options []*PpdbOption
 }
 
 func (optionList *PpdbOptionList) AddOpt(item PpdbOption) {
-	optionList.options = append(optionList.options, item)
+	optionList.Options = append(optionList.Options, &item)
 }
 
 func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOption {
@@ -67,7 +67,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
 						*/
 						//UpdateMoveStudent(optionList, curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 1)
-						dataChange := &StudentUpdate{
+						dataChange := StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -77,7 +77,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							NextOptChoice: optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance2,
 						}
-						dataChange.UpdateMoveStudent(optionList)
+						UpdateMoveStudent(optionList, dataChange)
 						fmt.Println("          >sec ori:", curIdxStd, ":",
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-",
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].Name, "-",
@@ -97,7 +97,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
 						*/
 						// curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 2
-						dataChange := &StudentUpdate{
+						dataChange := StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -107,7 +107,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							NextOptChoice: optionList[curOptIdx].PpdbRegistration[curIdxStd].ThirdChoiceOption,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
-						dataChange.UpdateMoveStudent(optionList)
+						UpdateMoveStudent(optionList, dataChange)
 						fmt.Println("          >third ori:", curIdxStd, ":", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ", nextOptIdx)
 					} else {
 						nextOptIdx = len(optionList) - 1
@@ -118,7 +118,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[nextOptIdx].Id
 						*/
-						dataChange := &StudentUpdate{
+						dataChange := StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -128,7 +128,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							NextOptChoice: optionList[nextOptIdx].Id,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
-						dataChange.UpdateMoveStudent(optionList)
+						UpdateMoveStudent(optionList, dataChange)
 					}
 
 					if nextOptIdx == -1 || nextOptIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
@@ -142,7 +142,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[len(optionList)-1].Id
 						*/
-						dataChange := &StudentUpdate{
+						dataChange := StudentUpdate{
 							curOptIdx:     curOptIdx,
 							nextOptIdx:    nextOptIdx,
 							firstOptIdx:   firstOptIdx,
@@ -152,7 +152,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							NextOptChoice: optionList[nextOptIdx].Id,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
-						dataChange.UpdateMoveStudent(optionList)
+						UpdateMoveStudent(optionList, dataChange)
 
 						optionList[len(optionList)-1].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
 						optionList[curOptIdx].RemoveStd(curIdxStd)
