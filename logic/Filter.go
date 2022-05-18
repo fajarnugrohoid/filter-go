@@ -2,6 +2,7 @@ package logic
 
 import (
 	"filterisasi/models"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"runtime"
 )
@@ -56,7 +57,11 @@ func (ppdbOptions *models.PpdbOptionList) ProcessFilter(status bool) []models.Pp
 } */
 func DoFilter(optionTypes map[string][]*models.PpdbOption, logger *logrus.Logger) map[string][]*models.PpdbOption {
 	optionTypes["abk"] = Filter1Options(optionTypes, "abk", 0, logger)
-
+	for i := 0; i < len(optionTypes["abk"]); i++ {
+		fmt.Println("", optionTypes["abk"][i].Name, "-Q:", optionTypes["abk"][i].Quota, "R:", len(optionTypes["abk"][i].PpdbRegistration))
+	}
+	SendQuota(optionTypes, "abk", "ketm", logger)
+	//os.Exit(0)
 	optionTypes = Doing2OptionsShareQuota(optionTypes, logger)
 	return optionTypes
 }

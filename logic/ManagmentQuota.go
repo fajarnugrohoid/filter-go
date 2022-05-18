@@ -5,6 +5,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func SendQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, logger *logrus.Logger) {
+	for i := 0; i < len(optionTypes[currentType]); i++ {
+		if optionTypes[currentType][i].Quota > len(optionTypes[currentType][i].PpdbRegistration) {
+			sisaQuota := optionTypes[currentType][i].Quota - len(optionTypes[currentType][i].PpdbRegistration)
+			optionTypes[targetType][i].Quota = optionTypes[targetType][i].Quota + sisaQuota
+			optionTypes[currentType][i].Quota = optionTypes[currentType][i].Quota - sisaQuota
+			optionTypes[currentType][i].AddQuota += sisaQuota
+		}
+	}
+}
+
 func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, reFilter bool, logger *logrus.Logger) (map[string][]*models.PpdbOption, bool) {
 	logger.Info("===========================need quota==============================")
 
