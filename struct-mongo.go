@@ -72,7 +72,7 @@ func fetchExpensiveItems(origin string, minPrice float64) ([]Item, error) {
 	c := session.DB("gfg").C("catalog")
 	defer session.Close()
 
-	//create the aggregator pipeline that will fetch just the needed data from MongoDB, and nothing more
+	//create the aggregator pipeline that will fetch just the needed repositories from MongoDB, and nothing more
 	pipe := c.Pipe([]bson.M{
 		{"$match": bson.M{
 			"brands": bson.M{

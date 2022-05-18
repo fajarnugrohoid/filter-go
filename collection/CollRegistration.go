@@ -1,4 +1,4 @@
-package repositories
+package collection
 
 import (
 	"context"
@@ -10,12 +10,13 @@ import (
 	"log"
 )
 
-func GetRegistrations(ctx context.Context, database *mongo.Database, firstChoice primitive.ObjectID) []models.PpdbRegistration {
+func GetRegistrations(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []models.PpdbRegistration {
 
 	//var optId = [1]primitive.ObjectID{firstChoice}
 	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
-	criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma"}
+	criteria := bson.M{"first_choice_option": firstChoice, "registration_level": level}
 	findOptions := options.Find()
+
 	findOptions.SetSort(bson.D{{"distance1", 1}})
 
 	csr, err := database.Collection("ppdb_registrations").Find(ctx, criteria, findOptions)

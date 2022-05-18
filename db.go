@@ -189,11 +189,11 @@ func main() {
 		//bsonBytes, _ := bson.Marshal(results)
 		//bson.Unmarshal(bsonBytes, &s)
 
-		data, err := bson.Marshal(results)
+		repositories, err := bson.Marshal(results)
 		if err != nil {
 			panic(err)
 		}
-		err = bson.Unmarshal(data, &s)
+		err = bson.Unmarshal(repositories, &s)
 		if err != nil {
 			panic(err)
 		}

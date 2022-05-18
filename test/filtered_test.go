@@ -2,8 +2,8 @@ package test
 
 import (
 	"context"
+	"filterisasi/collection"
 	"filterisasi/models"
-	"filterisasi/repositories"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,10 +26,10 @@ func TestByOptionFiltered(t *testing.T) {
 	var students []models.PpdbFiltered
 	var statistic []models.PpdbStatistic
 
-	statistic = repositories.GetAllStatistic(ctx, database, "ketm")
+	statistic = collection.GetAllStatistic(ctx, database, "ketm")
 	fmt.Println("statistic:", len(statistic))
 	for i := 0; i < len(statistic); i++ {
-		students = repositories.GetFilteredsByOpt(ctx, database, "ketm", statistic[i].Id)
+		students = collection.GetFilteredsByOpt(ctx, database, "ketm", statistic[i].Id)
 		fmt.Println("students:", len(students))
 		for j := 0; j < len(students); j++ {
 			fmt.Println(students[j].Name, " ", students[j].Distance)
@@ -53,16 +53,16 @@ func TestByStudentFiltered(t *testing.T) {
 	var students []models.PpdbFiltered
 	var statistic []models.PpdbStatistic
 	var allStatistic []models.PpdbStatistic
-	allStatistic = repositories.GetAllStatistic(ctx, database, "ketm")
+	allStatistic = collection.GetAllStatistic(ctx, database, "ketm")
 	for x := 0; x < len(allStatistic); x++ {
 		fmt.Println("optName:", allStatistic[x].Name)
-		students = repositories.GetFilteredsByOpt(ctx, database, "ketm", allStatistic[x].Id)
+		students = collection.GetFilteredsByOpt(ctx, database, "ketm", allStatistic[x].Id)
 		fmt.Println("students:", len(students))
 		for j := 0; j < len(students); j++ {
 			fmt.Println(students[j].Name, " ", students[j].Distance1, " accStatus:", students[j].AcceptedStatus)
 			if students[j].AcceptedStatus != 0 {
 				if students[j].AcceptedStatus == 1 {
-					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						fmt.Println(students[j].Distance1, " < ", statistic[i].Pg)
 						assert.Less(t, students[j].Distance1, statistic[i].Pg)
@@ -72,7 +72,7 @@ func TestByStudentFiltered(t *testing.T) {
 					}
 				}
 				if students[j].AcceptedStatus == 2 {
-					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance1 < statistic[i].Pg {
 							fmt.Println(">>error")
@@ -80,7 +80,7 @@ func TestByStudentFiltered(t *testing.T) {
 						assert.Less(t, students[j].Distance1, statistic[i].Pg)
 
 					}
-					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance2 < statistic[i].Pg {
 							fmt.Println(">>error")
@@ -91,21 +91,21 @@ func TestByStudentFiltered(t *testing.T) {
 				}
 
 				if students[j].AcceptedStatus == 3 {
-					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance1 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
 						assert.Less(t, students[j].Distance1, statistic[i].Pg)
 					}
-					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance2 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
 						assert.Less(t, students[j].Distance2, statistic[i].Pg)
 					}
-					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].ThirdChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].ThirdChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance3 < statistic[i].Pg {
 							fmt.Println(">>error")
@@ -132,10 +132,10 @@ func TestCountStudentFiltered(t *testing.T) {
 	var studentRegistrations []models.PpdbRegistration
 	var totalFiltered int
 	var totalRegistrations int
-	statistic = repositories.GetAllStatistic(ctx, database, "ketm")
+	statistic = collection.GetAllStatistic(ctx, database, "ketm")
 	for i := 0; i < len(statistic); i++ {
-		filtereds = repositories.GetFilteredsByOpt(ctx, database, "ketm", statistic[i].Id)
-		studentRegistrations = repositories.GetRegistrations(ctx, database, statistic[i].Id)
+		filtereds = collection.GetFilteredsByOpt(ctx, database, "ketm", statistic[i].Id)
+		studentRegistrations = collection.GetRegistrations(ctx, database, statistic[i].Id)
 		fmt.Println("students:", len(filtereds), "==", len(studentRegistrations))
 		totalFiltered += len(filtereds)
 		totalRegistrations += len(studentRegistrations)
