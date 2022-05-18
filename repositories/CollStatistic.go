@@ -5,6 +5,7 @@ import (
 	"filterisasi/models"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -40,9 +41,41 @@ func DeleteStatisticByOptionType(ctx context.Context, database *mongo.Database, 
 	}
 }
 
-func GetStatistic(ctx context.Context, database *mongo.Database, optionType string) []models.PpdbStatistic {
+func GetAllStatistic(ctx context.Context, database *mongo.Database, optionType string) []models.PpdbStatistic {
 
 	criteria := bson.M{"option_type": optionType}
+	findOptions := options.Find()
+
+	csr, err := database.Collection("ppdb_statistic").Find(ctx, criteria, findOptions)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer csr.Close(ctx)
+
+	result := make([]models.PpdbStatistic, 0)
+	for csr.Next(ctx) {
+		var row models.PpdbStatistic
+
+		err := csr.Decode(&row)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		tmp := models.PpdbStatistic{
+			Id:         row.Id,
+			Name:       row.Name,
+			OptionType: row.OptionType,
+			Pg:         row.Pg,
+		}
+
+		result = append(result, tmp)
+	}
+	return result
+}
+
+func GetStatisticById(ctx context.Context, database *mongo.Database, optionType string, id primitive.ObjectID) []models.PpdbStatistic {
+
+	criteria := bson.M{"option_type": optionType, "_id": id}
 	findOptions := options.Find()
 
 	csr, err := database.Collection("ppdb_statistic").Find(ctx, criteria, findOptions)

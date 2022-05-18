@@ -1,7 +1,7 @@
 package models
 
 import (
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"runtime"
 )
 
@@ -54,9 +54,9 @@ func (ppdbOptions *models.PpdbOptionList) ProcessFilter(status bool) []models.Pp
 	return ppdbOptions
 } */
 
-func DoFilter(optionTypes map[string][]*PpdbOption) map[string][]*PpdbOption {
-	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 0)
-	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 0)
+func DoFilter(optionTypes map[string][]*PpdbOption, logger *logrus.Logger) map[string][]*PpdbOption {
+	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 0, logger)
+	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 0, logger)
 
 	/*
 		fmt.Println("===========================res==============================")
@@ -84,24 +84,24 @@ func DoFilter(optionTypes map[string][]*PpdbOption) map[string][]*PpdbOption {
 	//share quota
 	var reFilterKondisiTertentu, reFilterKetm bool
 
-	optionTypes, reFilterKetm = CheckQuota(optionTypes, "ketm", "kondisi-tertentu", false)
-	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false)
+	optionTypes, reFilterKetm = CheckQuota(optionTypes, "ketm", "kondisi-tertentu", false, logger)
+	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false, logger)
 
-	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 1)
-	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 1)
+	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 1, logger)
+	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 1, logger)
 
 	if reFilterKondisiTertentu == true || reFilterKetm == true {
-		return DoFilter(optionTypes)
+		return DoFilter(optionTypes, logger)
 	}
 
 	return optionTypes
 }
 
-func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, targetType string, reFilter bool) (map[string][]*PpdbOption, bool) {
-	fmt.Println("===========================need quota==============================")
+func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, targetType string, reFilter bool, logger *logrus.Logger) (map[string][]*PpdbOption, bool) {
+	logger.Info("===========================need quota==============================")
 
 	for i := 0; i < len(optionTypes[currentType]); i++ {
-		fmt.Println(i, "-", optionTypes[currentType][i].Id, " - ",
+		logger.Debug(i, "-", optionTypes[currentType][i].Id, " - ",
 			optionTypes[currentType][i].Name,
 			" - q:", optionTypes[currentType][i].Quota,
 			" - Need:", optionTypes[currentType][i].NeedQuotaFirstOpt,
@@ -114,7 +114,7 @@ func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, target
 		if optionTypes[currentType][i].NeedQuotaFirstOpt > 0 {
 
 			sisaQuota := optionTypes[targetType][i].Quota - len(optionTypes[targetType][i].PpdbRegistration)
-			fmt.Println("sisaQuota:", sisaQuota)
+			logger.Debug("sisaQuota:", sisaQuota)
 			if sisaQuota > 0 {
 
 				if optionTypes[currentType][i].NeedQuotaFirstOpt >= sisaQuota {
@@ -122,10 +122,10 @@ func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, target
 					optionTypes[currentType][i].NeedQuotaFirstOpt = optionTypes[currentType][i].NeedQuotaFirstOpt - sisaQuota
 					optionTypes[currentType][i].AddQuota += sisaQuota
 					optionTypes[targetType][i].Quota = optionTypes[targetType][i].Quota - sisaQuota
-					fmt.Println("targetType.quota:", optionTypes[targetType][i].Quota)
+					logger.Debug("targetType.quota:", optionTypes[targetType][i].Quota)
 				} else {
 					//jika kebutuhan kuota hanya sedikit artinya hanya membutuhkan sedikit dari sisa kuota lawannya
-					fmt.Println("sisaQuota:", sisaQuota, " - NeedQuotaFirstOpt:", optionTypes[currentType][i].NeedQuotaFirstOpt)
+					logger.Debug("sisaQuota:", sisaQuota, " - NeedQuotaFirstOpt:", optionTypes[currentType][i].NeedQuotaFirstOpt)
 					optionTypes[currentType][i].Quota = optionTypes[currentType][i].Quota + optionTypes[currentType][i].NeedQuotaFirstOpt
 					optionTypes[currentType][i].AddQuota += optionTypes[currentType][i].NeedQuotaFirstOpt
 					optionTypes[targetType][i].Quota = optionTypes[targetType][i].Quota - optionTypes[currentType][i].NeedQuotaFirstOpt
@@ -135,24 +135,24 @@ func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, target
 
 				optionTypes[currentType][i].Filtered = 0
 				optionTypes[currentType][i].UpdateQuota = true
-				optionTypes[currentType] = PullStudentToFirstChoice(optionTypes[currentType], i)
+				optionTypes[currentType] = PullStudentToFirstChoice(optionTypes[currentType], i, logger)
 				reFilter = true
 			}
 		}
 	}
 
-	fmt.Println("optionType1:", currentType)
+	logger.Debug("optionType1:", currentType)
 	for i := 0; i < len(optionTypes[currentType]); i++ {
-		fmt.Println(i, "-", optionTypes[currentType][i].Id, " - ", optionTypes[currentType][i].Name,
+		logger.Debug(i, "-", optionTypes[currentType][i].Id, " - ", optionTypes[currentType][i].Name,
 			" : q: ", optionTypes[currentType][i].Quota,
 			" : p: ", len(optionTypes[currentType][i].PpdbRegistration),
 			" - needQuota:", optionTypes[currentType][i].NeedQuotaFirstOpt,
 			" - AddQuota:", optionTypes[currentType][i].AddQuota,
 		)
 	}
-	fmt.Println("optionType2:", targetType)
+	logger.Debug("optionType2:", targetType)
 	for i := 0; i < len(optionTypes[targetType]); i++ {
-		fmt.Println(i, "-", optionTypes[targetType][i].Id, " - ", optionTypes[targetType][i].Name,
+		logger.Debug(i, "-", optionTypes[targetType][i].Id, " - ", optionTypes[targetType][i].Name,
 			" : q: ", optionTypes[targetType][i].Quota,
 			" : p: ", len(optionTypes[targetType][i].PpdbRegistration),
 			" - needQuota:", optionTypes[targetType][i].NeedQuotaFirstOpt,
@@ -163,8 +163,8 @@ func CheckQuota(optionTypes map[string][]*PpdbOption, currentType string, target
 	return optionTypes, reFilter
 }
 
-func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int) []*PpdbOption {
-	fmt.Println("currTargetIdxOpt:", currTargetIdxOpt)
+func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int, logger *logrus.Logger) []*PpdbOption {
+	logger.Debug("currTargetIdxOpt:", currTargetIdxOpt)
 	//pull student from backup history pilihan 1
 
 	var listPullOpt = make([]int, 0)
@@ -177,7 +177,7 @@ func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int) []
 				nextTargetIdxOpt = len(optionList) - 1
 				targetIdxStd = FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 
-				fmt.Println("Yg tidak diterima == :",
+				logger.Debug("Yg tidak diterima == :",
 					optionList[currTargetIdxOpt].RegistrationHistory[j].Id,
 					" - ", optionList[currTargetIdxOpt].RegistrationHistory[j].Name,
 					" - AccStatus:", optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus,
@@ -187,7 +187,7 @@ func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int) []
 			} else {
 				nextTargetIdxOpt = optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex
 				targetIdxStd = FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
-				fmt.Println("Yg tidak diterima !=:",
+				logger.Debug("Yg tidak diterima !=:",
 					optionList[currTargetIdxOpt].RegistrationHistory[j].Id,
 					" - ", optionList[currTargetIdxOpt].RegistrationHistory[j].Name,
 					" - AccStatus:", optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedStatus,
@@ -247,15 +247,15 @@ func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int) []
 
 		optIdxFirstChoice := FindIndex(optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption, optionList)
 		stdIdx := FindIndexStudent(optionList[currTargetIdxOpt].HistoryShifting[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
-		fmt.Println("shifting name :", optionList[currTargetIdxOpt].HistoryShifting[j].Name)
-		fmt.Println("optIdxFirstChoice:", optionList[optIdxFirstChoice].Name, " stdIdx:", stdIdx)
+		logger.Debug("shifting name :", optionList[currTargetIdxOpt].HistoryShifting[j].Name)
+		logger.Debug("optIdxFirstChoice:", optionList[optIdxFirstChoice].Name, " stdIdx:", stdIdx)
 
 		if optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus > levelAcc {
-			fmt.Println("levelAcc:", levelAcc)
+			logger.Debug("levelAcc:", levelAcc)
 			nextTargetIdxOpt := optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex
-			fmt.Println("nextTargetIdxOpt.len:", len(optionList[nextTargetIdxOpt].PpdbRegistration))
+			logger.Debug("nextTargetIdxOpt.len:", len(optionList[nextTargetIdxOpt].PpdbRegistration))
 			targetIdxStd := FindIndexStudentTest(optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
-			fmt.Println("nextTargetIdxOpt:", nextTargetIdxOpt, " ", optionList[nextTargetIdxOpt].Name, " targetIdxStd:", targetIdxStd)
+			logger.Debug("nextTargetIdxOpt:", nextTargetIdxOpt, " ", optionList[nextTargetIdxOpt].Name, " targetIdxStd:", targetIdxStd)
 
 			/*
 				optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedStatus = levelAcc
@@ -299,52 +299,41 @@ func PullStudentToFirstChoice(optionList []*PpdbOption, currTargetIdxOpt int) []
 	}
 
 	for i := 0; i < len(listPullOpt); i++ {
-		optionList = PullStudentToFirstChoice(optionList, listPullOpt[i])
+		optionList = PullStudentToFirstChoice(optionList, listPullOpt[i], logger)
 	}
 
 	return optionList
 }
 
-func Filter2OptionsShareQuota(optionTypes map[string][]*PpdbOption, optType string, loop int) []*PpdbOption {
+func Filter2OptionsShareQuota(optionTypes map[string][]*PpdbOption, optType string, loop int, logger *logrus.Logger) []*PpdbOption {
 
 	runtime.GOMAXPROCS(2)
 	var messages = make(chan []*PpdbOption)
-	fmt.Println("Filter2OptionsShareQuota")
+	logger.Info("Filter2OptionsShareQuota")
 
 	var getFiltered = func(objs chan []*PpdbOption, option []*PpdbOption) {
-		fmt.Println("bef getFiltered:")
-		ppdbOptions := ProcessFilter(option, true, loop)
-		fmt.Println("aft getFiltered")
+		logger.Info("bef getFiltered:")
+		ppdbOptions := ProcessFilter(option, true, loop, logger)
+		logger.Info("aft getFiltered")
 		messages <- ppdbOptions
 	}
-	fmt.Println("end getFiltered")
+	logger.Info("end getFiltered")
 	if optType == "ketm" {
 		go getFiltered(messages, optionTypes["ketm"])
-		fmt.Println("go done getFiltered")
+		logger.Info("go done getFiltered")
 
 	} else if optType == "kondisi-tertentu" {
 		go getFiltered(messages, optionTypes["kondisi-tertentu"])
-		fmt.Println("go done getFiltered")
+		logger.Info("go done getFiltered")
 
 	}
-	fmt.Println("go done getFiltered")
+	logger.Info("go done getFiltered")
 	data := <-messages // read from channel a
 	close(messages)
 
-	fmt.Println("close messages")
+	logger.Info("close messages")
 
 	//fmt.Println(data)
 
 	return data
-}
-
-func Filter2OptionsShareQuotaSingleGoroutine(optionTypes map[string][]*PpdbOption, optType string, loop int) []*PpdbOption {
-
-	fmt.Println("Filter2OptionsShareQuota")
-
-	ppdbOptions := ProcessFilter(optionTypes[optType], true, loop)
-
-	fmt.Println("close messages")
-
-	return ppdbOptions
 }

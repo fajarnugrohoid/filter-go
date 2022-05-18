@@ -1,7 +1,7 @@
 package models
 
 import (
-	"fmt"
+	"github.com/sirupsen/logrus"
 )
 
 type PpdbOptionList struct {
@@ -12,20 +12,21 @@ func (optionList *PpdbOptionList) AddOpt(item PpdbOption) {
 	optionList.Options = append(optionList.Options, &item)
 }
 
-func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOption {
+func ProcessFilter(optionList []*PpdbOption, status bool, loop int, logger *logrus.Logger) []*PpdbOption {
 	var nextOptIdx int
 	var histIdxStd int
+
 	for curOptIdx := 0; curOptIdx < len(optionList); curOptIdx++ {
 		//fmt.Println("ProcessFilter:", optionList[i].Id)
 		if optionList[curOptIdx].Filtered == 0 {
 			SortByDistanceAndAge(optionList[curOptIdx].PpdbRegistration)
 
-			fmt.Println("afterSortByDistanceAndAge")
-			fmt.Println(optionList[curOptIdx].Id, " - ", optionList[curOptIdx].Name,
+			logger.Debug("afterSortByDistanceAndAge")
+			logger.Debug(optionList[curOptIdx].Id, " - ", optionList[curOptIdx].Name,
 				" len.std:", len(optionList[curOptIdx].PpdbRegistration),
 				" : q: ", optionList[curOptIdx].Quota, " \n ")
 			for y, std := range optionList[curOptIdx].PpdbRegistration {
-				fmt.Println("", y, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
+				logger.Debug("", y, ":", std.Name, " - acc:", std.AcceptedStatus, " distance1: ", std.Distance1,
 					" AccIdx: ", std.AcceptedIndex,
 					" AccId: ", std.AcceptedChoiceId,
 				)
@@ -34,17 +35,17 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 			if len(optionList[curOptIdx].PpdbRegistration) > optionList[curOptIdx].Quota { //cek jml pendaftar lebih dari quota sekolah
 
 				if optionList[curOptIdx].UpdateQuota == true {
-					optionList[curOptIdx].NeedQuotaFirstOpt = (len(optionList[curOptIdx].PpdbRegistration) - optionList[curOptIdx].Quota)
+					optionList[curOptIdx].NeedQuotaFirstOpt = len(optionList[curOptIdx].PpdbRegistration) - optionList[curOptIdx].Quota
 					optionList[curOptIdx].UpdateQuota = false
 				}
-				fmt.Println(optionList[curOptIdx].Name, " NeedQuotaFirstOpt:", optionList[curOptIdx].NeedQuotaFirstOpt)
+				logger.Debug(optionList[curOptIdx].Name, " NeedQuotaFirstOpt:", optionList[curOptIdx].NeedQuotaFirstOpt)
 
 				x := 0
 				for curIdxStd := optionList[curOptIdx].Quota; curIdxStd < len(optionList[curOptIdx].PpdbRegistration); curIdxStd++ { ////cut siswa yg lebih dari quota move to sec, third choice
 
 					firstOptIdx := FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].FirstChoiceOption, optionList)
 					histIdxStd = FindIndexStudent(optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, optionList[firstOptIdx].RegistrationHistory)
-					fmt.Println(x, "-findIdxStd:",
+					logger.Debug(x, "-findIdxStd:",
 						optionList[curOptIdx].Name, "-",
 						optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, "-",
 						optionList[curOptIdx].PpdbRegistration[curIdxStd].Name,
@@ -78,7 +79,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance2,
 						}
 						UpdateMoveStudent(optionList, dataChange)
-						fmt.Println("          >sec ori:", curIdxStd, ":",
+						logger.Debug("          >sec ori:", curIdxStd, ":",
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-",
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].Name, "-",
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ",
@@ -108,7 +109,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
 						UpdateMoveStudent(optionList, dataChange)
-						fmt.Println("          >third ori:", curIdxStd, ":", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ", nextOptIdx)
+						logger.Debug("          >third ori:", curIdxStd, ":", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ", nextOptIdx)
 					} else {
 						nextOptIdx = len(optionList) - 1
 						/*
@@ -132,7 +133,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 					}
 
 					if nextOptIdx == -1 || nextOptIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
-						fmt.Println("in if -1 idx:", nextOptIdx, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", len(optionList)-1)
+						logger.Debug("in if -1 idx:", nextOptIdx, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", len(optionList)-1)
 						nextOptIdx = len(optionList) - 1
 						/*
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus = 3
@@ -158,7 +159,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 						optionList[curOptIdx].RemoveStd(curIdxStd)
 						curIdxStd--
 					} else {
-						fmt.Println(optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-idx:", nextOptIdx)
+						logger.Debug(optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-idx:", nextOptIdx)
 						optionList[nextOptIdx].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
 						optionList[curOptIdx].AddHistory(optionList[curOptIdx].PpdbRegistration[curIdxStd], nextOptIdx)
 						optionList[curOptIdx].RemoveStd(curIdxStd)
@@ -177,7 +178,7 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int) []*PpdbOptio
 	}
 
 	if status == true {
-		return ProcessFilter(optionList, false, 1)
+		return ProcessFilter(optionList, false, 1, logger)
 	}
 	return optionList
 }
