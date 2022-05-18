@@ -16,8 +16,11 @@ type StudentUpdate struct {
 
 func UpdateMoveStudent(optionList []*PpdbOption, d StudentUpdate) {
 	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedStatus = d.accStatus
-	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedChoiceId = optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].SecondChoiceOption
+	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedIndex = d.nextOptIdx
+	//optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedChoiceId = optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].SecondChoiceOption
+	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedChoiceId = d.NextOptChoice
 	optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].Distance = d.Distance
+
 	optionList[d.firstOptIdx].RegistrationHistory[d.histIdxStd].AcceptedStatus = d.accStatus
 	optionList[d.firstOptIdx].RegistrationHistory[d.histIdxStd].AcceptedIndex = d.nextOptIdx
 	optionList[d.firstOptIdx].RegistrationHistory[d.histIdxStd].AcceptedChoiceId = d.NextOptChoice

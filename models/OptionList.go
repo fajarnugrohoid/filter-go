@@ -133,8 +133,10 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int, logger *logr
 					}
 
 					if nextOptIdx == -1 || nextOptIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
-						logger.Debug("in if -1 idx:", nextOptIdx, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", len(optionList)-1)
+
 						nextOptIdx = len(optionList) - 1
+						logger.Debug("in if -1 idx:", nextOptIdx, "-",
+							optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", len(optionList)-1, " accId:", optionList[nextOptIdx].Id)
 						/*
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus = 3
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedIndex = nextOptIdx
@@ -157,6 +159,9 @@ func ProcessFilter(optionList []*PpdbOption, status bool, loop int, logger *logr
 
 						optionList[len(optionList)-1].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
 						optionList[curOptIdx].RemoveStd(curIdxStd)
+						for n := 0; n < len(optionList[len(optionList)-1].PpdbRegistration); n++ {
+							logger.Debug(optionList[len(optionList)-1].PpdbRegistration[n].Name, " accId:", optionList[len(optionList)-1].PpdbRegistration[n].AcceptedChoiceId)
+						}
 						curIdxStd--
 					} else {
 						logger.Debug(optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-idx:", nextOptIdx)

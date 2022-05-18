@@ -6,7 +6,6 @@ import (
 	"filterisasi/repositories"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"testing"
@@ -53,53 +52,65 @@ func TestByStudentFiltered(t *testing.T) {
 
 	var students []models.PpdbFiltered
 	var statistic []models.PpdbStatistic
+	var allStatistic []models.PpdbStatistic
+	allStatistic = repositories.GetAllStatistic(ctx, database, "ketm")
+	for x := 0; x < len(allStatistic); x++ {
+		fmt.Println("optName:", allStatistic[x].Name)
+		students = repositories.GetFilteredsByOpt(ctx, database, "ketm", allStatistic[x].Id)
+		fmt.Println("students:", len(students))
+		for j := 0; j < len(students); j++ {
+			fmt.Println(students[j].Name, " ", students[j].Distance1, " accStatus:", students[j].AcceptedStatus)
+			if students[j].AcceptedStatus != 0 {
+				if students[j].AcceptedStatus == 1 {
+					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					for i := 0; i < len(statistic); i++ {
+						fmt.Println(students[j].Distance1, " < ", statistic[i].Pg)
+						assert.Less(t, students[j].Distance1, statistic[i].Pg)
+						if students[j].Distance1 < statistic[i].Pg {
+							fmt.Println(">>error")
+						}
+					}
+				}
+				if students[j].AcceptedStatus == 2 {
+					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					for i := 0; i < len(statistic); i++ {
+						if students[j].Distance1 < statistic[i].Pg {
+							fmt.Println(">>error")
+						}
+						assert.Less(t, students[j].Distance1, statistic[i].Pg)
 
-	accId, err := primitive.ObjectIDFromHex("60924c90004e4b0038618a14")
-	students = repositories.GetFilteredsByOpt(ctx, database, "ketm", accId)
-	fmt.Println("students:", len(students))
-	for j := 0; j < len(students); j++ {
-		fmt.Println(students[j].Name, " ", students[j].Distance1)
-		if students[j].AcceptedStatus != 0 {
-			if students[j].AcceptedStatus == 1 {
-				statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
-				for i := 0; i < len(statistic); i++ {
-					if students[j].Distance1 < statistic[i].Pg {
-						fmt.Println(">>error")
 					}
-				}
-			}
-			if students[j].AcceptedStatus == 2 {
-				statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
-				for i := 0; i < len(statistic); i++ {
-					if students[j].Distance1 < statistic[i].Pg {
-						fmt.Println(">>error")
-					}
-				}
-				statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
-				for i := 0; i < len(statistic); i++ {
-					if students[j].Distance2 < statistic[i].Pg {
-						fmt.Println(">>error")
-					}
-				}
-			}
+					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
+					for i := 0; i < len(statistic); i++ {
+						if students[j].Distance2 < statistic[i].Pg {
+							fmt.Println(">>error")
+						}
+						assert.Less(t, students[j].Distance2, statistic[i].Pg)
 
-			if students[j].AcceptedStatus == 3 {
-				statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
-				for i := 0; i < len(statistic); i++ {
-					if students[j].Distance1 < statistic[i].Pg {
-						fmt.Println(">>error")
 					}
 				}
-				statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
-				for i := 0; i < len(statistic); i++ {
-					if students[j].Distance2 < statistic[i].Pg {
-						fmt.Println(">>error")
+
+				if students[j].AcceptedStatus == 3 {
+					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					for i := 0; i < len(statistic); i++ {
+						if students[j].Distance1 < statistic[i].Pg {
+							fmt.Println(">>error")
+						}
+						assert.Less(t, students[j].Distance1, statistic[i].Pg)
 					}
-				}
-				statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].ThirdChoiceOption)
-				for i := 0; i < len(statistic); i++ {
-					if students[j].Distance3 < statistic[i].Pg {
-						fmt.Println(">>error")
+					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
+					for i := 0; i < len(statistic); i++ {
+						if students[j].Distance2 < statistic[i].Pg {
+							fmt.Println(">>error")
+						}
+						assert.Less(t, students[j].Distance2, statistic[i].Pg)
+					}
+					statistic = repositories.GetStatisticById(ctx, database, "ketm", students[j].ThirdChoiceOption)
+					for i := 0; i < len(statistic); i++ {
+						if students[j].Distance3 < statistic[i].Pg {
+							fmt.Println(">>error")
+						}
+						assert.Less(t, students[j].Distance3, statistic[i].Pg)
 					}
 				}
 			}

@@ -31,6 +31,7 @@ func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions [
 	persons := []interface{}{}
 
 	for i := 0; i < len(ppdbOptions); i++ {
+		fmt.Println("optFiltered:", ppdbOptions[i].Name, " registrations:", len(ppdbOptions[i].PpdbRegistration))
 		for _, v := range ppdbOptions[i].PpdbRegistration {
 			persons = append(persons, v)
 		}
@@ -106,8 +107,8 @@ func GetFiltereds(ctx context.Context, database *mongo.Database, optionType stri
 			Distance2:          row.Distance2,
 			Distance3:          row.Distance3,
 			BirthDate:          row.BirthDate,
-			AcceptedStatus:     0,
-			AcceptedIndex:      0,
+			AcceptedStatus:     row.AcceptedStatus,
+			AcceptedIndex:      row.AcceptedIndex,
 		}
 
 		result = append(result, tmp)
@@ -150,8 +151,8 @@ func GetFilteredsByOpt(ctx context.Context, database *mongo.Database, optionType
 			Distance2:          row.Distance2,
 			Distance3:          row.Distance3,
 			BirthDate:          row.BirthDate,
-			AcceptedStatus:     0,
-			AcceptedIndex:      0,
+			AcceptedStatus:     row.AcceptedStatus,
+			AcceptedIndex:      row.AcceptedIndex,
 		}
 
 		result = append(result, tmp)
