@@ -29,10 +29,10 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 			if len(optionList[curOptIdx].PpdbRegistration) > optionList[curOptIdx].Quota { //cek jml pendaftar lebih dari quota sekolah
 
 				if optionList[curOptIdx].UpdateQuota == true {
-					optionList[curOptIdx].NeedQuotaFirstOpt = len(optionList[curOptIdx].PpdbRegistration) - optionList[curOptIdx].Quota
+					optionList[curOptIdx].NeedQuota = len(optionList[curOptIdx].PpdbRegistration) - optionList[curOptIdx].Quota
 					optionList[curOptIdx].UpdateQuota = false
 				}
-				logger.Debug(optionList[curOptIdx].Name, " NeedQuotaFirstOpt:", optionList[curOptIdx].NeedQuotaFirstOpt)
+				logger.Debug(optionList[curOptIdx].Name, " NeedQuota:", optionList[curOptIdx].NeedQuota)
 
 				x := 0
 				for curIdxStd := optionList[curOptIdx].Quota; curIdxStd < len(optionList[curOptIdx].PpdbRegistration); curIdxStd++ { ////cut siswa yg lebih dari quota move to sec, third choice
@@ -151,17 +151,17 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 						}
 						repositories.UpdateMoveStudent(optionList, dataChange)
 
-						optionList[len(optionList)-1].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
-						optionList[curOptIdx].RemoveStd(curIdxStd)
+						optionList[len(optionList)-1].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd], logger)
+						optionList[curOptIdx].RemoveStd(curIdxStd, logger)
 						for n := 0; n < len(optionList[len(optionList)-1].PpdbRegistration); n++ {
 							logger.Debug(optionList[len(optionList)-1].PpdbRegistration[n].Name, " accId:", optionList[len(optionList)-1].PpdbRegistration[n].AcceptedChoiceId)
 						}
 						curIdxStd--
 					} else {
 						logger.Debug(optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-idx:", nextOptIdx)
-						optionList[nextOptIdx].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd])
+						optionList[nextOptIdx].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd], logger)
 						optionList[curOptIdx].AddHistory(optionList[curOptIdx].PpdbRegistration[curIdxStd], nextOptIdx)
-						optionList[curOptIdx].RemoveStd(curIdxStd)
+						optionList[curOptIdx].RemoveStd(curIdxStd, logger)
 						curIdxStd--
 
 						optionList[nextOptIdx].Filtered = 0

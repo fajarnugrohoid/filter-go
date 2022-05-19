@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,7 +16,7 @@ type PpdbOption struct {
 	SchoolId            primitive.ObjectID `bson:"school,omitempty"`
 	Filtered            int
 	UpdateQuota         bool
-	NeedQuotaFirstOpt   int
+	NeedQuota           int
 	AddQuota            int
 	PpdbSchool          PpdbSchool `bson:"ppdb_schools,omitempty"`
 	PpdbRegistration    []PpdbRegistration
@@ -27,12 +28,12 @@ func (ppdbOption PpdbOption) addItem(options []PpdbOption) []PpdbOption {
 	return append(options, ppdbOption)
 }
 
-func (option *PpdbOption) AddStd(item PpdbRegistration) {
-	fmt.Println("addStd:", item.Name)
+func (option *PpdbOption) AddStd(item PpdbRegistration, logger *logrus.Logger) {
+	logger.Debug("addStd:", item.Name)
 	option.PpdbRegistration = append(option.PpdbRegistration, item)
 }
-func (option *PpdbOption) RemoveStd(i int) {
-	fmt.Println("RemoveStd:", option.PpdbRegistration[i].Name)
+func (option *PpdbOption) RemoveStd(i int, logger *logrus.Logger) {
+	logger.Debug("RemoveStd:", option.PpdbRegistration[i].Name)
 	option.PpdbRegistration = append(option.PpdbRegistration[:i], option.PpdbRegistration[i+1:]...)
 }
 

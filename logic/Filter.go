@@ -67,8 +67,15 @@ func DoFilter(optionTypes map[string][]*models.PpdbOption, logger *logrus.Logger
 }
 
 func Doing2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, logger *logrus.Logger) map[string][]*models.PpdbOption {
-	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 0, logger)
-	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 0, logger)
+	optionTypes["ketm"] = RunFilter(optionTypes, "ketm", 0, logger)
+	optionTypes["kondisi-tertentu"] = RunFilter(optionTypes, "kondisi-tertentu", 0, logger)
+
+	for i := 0; i < len(optionTypes["ketm"]); i++ {
+		fmt.Println("", optionTypes["ketm"][i].Name, "-Q:", optionTypes["ketm"][i].Quota, "R:", len(optionTypes["ketm"][i].PpdbRegistration))
+	}
+	for i := 0; i < len(optionTypes["kondisi-tertentu"]); i++ {
+		fmt.Println("", optionTypes["kondisi-tertentu"][i].Name, "-Q:", optionTypes["kondisi-tertentu"][i].Quota, "R:", len(optionTypes["kondisi-tertentu"][i].PpdbRegistration))
+	}
 
 	//share quota
 	var reFilterKondisiTertentu, reFilterKetm bool
@@ -76,8 +83,8 @@ func Doing2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, logger
 	optionTypes, reFilterKetm = CheckQuota(optionTypes, "ketm", "kondisi-tertentu", false, logger)
 	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false, logger)
 
-	optionTypes["ketm"] = Filter2OptionsShareQuota(optionTypes, "ketm", 1, logger)
-	optionTypes["kondisi-tertentu"] = Filter2OptionsShareQuota(optionTypes, "kondisi-tertentu", 1, logger)
+	optionTypes["ketm"] = RunFilter(optionTypes, "ketm", 1, logger)
+	optionTypes["kondisi-tertentu"] = RunFilter(optionTypes, "kondisi-tertentu", 1, logger)
 
 	if reFilterKondisiTertentu == true || reFilterKetm == true {
 		return DoFilter(optionTypes, logger)
@@ -86,7 +93,7 @@ func Doing2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, logger
 	return optionTypes
 }
 
-func Filter2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, optType string, loop int, logger *logrus.Logger) []*models.PpdbOption {
+func RunFilter(optionTypes map[string][]*models.PpdbOption, optType string, loop int, logger *logrus.Logger) []*models.PpdbOption {
 
 	runtime.GOMAXPROCS(2)
 	var messages = make(chan []*models.PpdbOption)

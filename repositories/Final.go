@@ -25,7 +25,7 @@ func UpdateStatisticByOpt(ctx context.Context, database *mongo.Database, optionT
 		logger.Info(i, "-", optionTypes[optType][i].Id, " - ", optionTypes[optType][i].Name,
 			" : q: ", optionTypes[optType][i].Quota,
 			" : p: ", len(optionTypes[optType][i].PpdbRegistration),
-			" - needQuota:", optionTypes[optType][i].NeedQuotaFirstOpt,
+			" - needQuota:", optionTypes[optType][i].NeedQuota,
 			" - AddQuota:", optionTypes[optType][i].AddQuota,
 		)
 		for i, std := range optionTypes[optType][i].PpdbRegistration {

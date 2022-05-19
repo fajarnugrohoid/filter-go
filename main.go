@@ -106,7 +106,7 @@ func main() {
 		logger.Info(i, "-", optionTypes["kondisi-tertentu"][i].Id, " - ", optionTypes["kondisi-tertentu"][i].Name,
 			" : q: ", optionTypes["kondisi-tertentu"][i].Quota,
 			" : p: ", len(optionTypes["kondisi-tertentu"][i].PpdbRegistration),
-			" - needQuota:", optionTypes["kondisi-tertentu"][i].NeedQuotaFirstOpt,
+			" - needQuota:", optionTypes["kondisi-tertentu"][i].NeedQuota,
 			" - AddQuota:", optionTypes["kondisi-tertentu"][i].AddQuota,
 		)
 	}

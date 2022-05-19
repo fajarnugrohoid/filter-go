@@ -59,8 +59,8 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			}
 			repositories.UpdatePullStudentFirstChoice(optionList, dataChange)
 
-			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
-			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)
+			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd], logger)
+			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd, logger)
 			j--
 			if nextTargetIdxOpt != len(optionList)-1 {
 				optionList[nextTargetIdxOpt].Filtered = 0
@@ -135,8 +135,8 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			}
 			repositories.UpdatePullStudentByChoice(optionList, dataChange)
 
-			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd])
-			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd)
+			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd], logger)
+			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd, logger)
 
 		}
 	}
