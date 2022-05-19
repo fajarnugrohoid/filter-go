@@ -90,7 +90,7 @@ func main() {
 		}*/
 	}
 
-	optionTypes = logic.DoFilter(optionTypes, logger)
+	optionTypes = logic.DoFilterSenior(optionTypes, logger)
 	/*
 		fmt.Println("===========================res-end==============================")
 		for _, opt := range optionTypes["ketm"] {

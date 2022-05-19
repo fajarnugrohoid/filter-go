@@ -5,7 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func SendQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, logger *logrus.Logger) {
+func SendAllQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, logger *logrus.Logger) {
 	for i := 0; i < len(optionTypes[currentType]); i++ {
 		if optionTypes[currentType][i].Quota > len(optionTypes[currentType][i].PpdbRegistration) {
 			sisaQuota := optionTypes[currentType][i].Quota - len(optionTypes[currentType][i].PpdbRegistration)

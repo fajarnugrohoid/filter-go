@@ -50,67 +50,71 @@ func TestByStudentFiltered(t *testing.T) {
 
 	database := client.Database("ppdb21")
 
+	var optType string
+	optType = "kondisi-tertentu"
+
 	var students []models.PpdbFiltered
 	var statistic []models.PpdbStatistic
 	var allStatistic []models.PpdbStatistic
-	allStatistic = collection.GetAllStatistic(ctx, database, "ketm")
+	allStatistic = collection.GetAllStatistic(ctx, database, optType)
 	for x := 0; x < len(allStatistic); x++ {
 		fmt.Println("optName:", allStatistic[x].Name)
-		students = collection.GetFilteredsByOpt(ctx, database, "ketm", allStatistic[x].Id)
+		students = collection.GetFilteredsByOpt(ctx, database, optType, allStatistic[x].Id)
 		fmt.Println("students:", len(students))
 		for j := 0; j < len(students); j++ {
 			fmt.Println(students[j].Name, " ", students[j].Distance1, " accStatus:", students[j].AcceptedStatus)
 			if students[j].AcceptedStatus != 0 {
 				if students[j].AcceptedStatus == 1 {
-					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, optType, students[j].FirstChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						fmt.Println(students[j].Distance1, " < ", statistic[i].Pg)
-						assert.Less(t, students[j].Distance1, statistic[i].Pg)
+						assert.Greater(t, students[j].Distance1, statistic[i].Pg) //jika jarak siswa lebih besar dari pg statistic, maka memang benar harus terlempar ke pilihan 2,3, buangan
 						if students[j].Distance1 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
 					}
 				}
 				if students[j].AcceptedStatus == 2 {
-					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, optType, students[j].FirstChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance1 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
-						assert.Less(t, students[j].Distance1, statistic[i].Pg)
+						assert.Greater(t, students[j].Distance1, statistic[i].Pg)
 
 					}
-					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, optType, students[j].SecondChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance2 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
-						assert.Less(t, students[j].Distance2, statistic[i].Pg)
+						assert.Greater(t, students[j].Distance2, statistic[i].Pg)
 
 					}
 				}
 
 				if students[j].AcceptedStatus == 3 {
-					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].FirstChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, optType, students[j].FirstChoiceOption)
 					for i := 0; i < len(statistic); i++ {
+						fmt.Println(students[j].Name, "-", students[j].Distance1, " < ", statistic[i].Pg)
 						if students[j].Distance1 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
-						assert.Less(t, students[j].Distance1, statistic[i].Pg)
+						assert.Greater(t, students[j].Distance1, statistic[i].Pg)
 					}
-					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].SecondChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, optType, students[j].SecondChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance2 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
-						assert.Less(t, students[j].Distance2, statistic[i].Pg)
+						assert.Greater(t, students[j].Distance2, statistic[i].Pg)
 					}
-					statistic = collection.GetStatisticById(ctx, database, "ketm", students[j].ThirdChoiceOption)
+					statistic = collection.GetStatisticById(ctx, database, optType, students[j].ThirdChoiceOption)
 					for i := 0; i < len(statistic); i++ {
 						if students[j].Distance3 < statistic[i].Pg {
 							fmt.Println(">>error")
 						}
-						assert.Less(t, students[j].Distance3, statistic[i].Pg)
+						assert.Greater(t, students[j].Distance3, statistic[i].Pg)
 					}
 				}
 			}
@@ -126,16 +130,20 @@ func TestCountStudentFiltered(t *testing.T) {
 	}
 	defer client.Disconnect(ctx)
 
+	var optType, level string
+	optType = "ketm"
+	level = "sma"
+
 	database := client.Database("ppdb21")
 	var filtereds []models.PpdbFiltered
 	var statistic []models.PpdbStatistic
 	var studentRegistrations []models.PpdbRegistration
 	var totalFiltered int
 	var totalRegistrations int
-	statistic = collection.GetAllStatistic(ctx, database, "ketm")
+	statistic = collection.GetAllStatistic(ctx, database, optType)
 	for i := 0; i < len(statistic); i++ {
-		filtereds = collection.GetFilteredsByOpt(ctx, database, "ketm", statistic[i].Id)
-		studentRegistrations = collection.GetRegistrations(ctx, database, statistic[i].Id)
+		filtereds = collection.GetFilteredsByOpt(ctx, database, optType, statistic[i].Id)
+		studentRegistrations = collection.GetRegistrations(ctx, database, level, statistic[i].Id)
 		fmt.Println("students:", len(filtereds), "==", len(studentRegistrations))
 		totalFiltered += len(filtereds)
 		totalRegistrations += len(studentRegistrations)
@@ -144,4 +152,10 @@ func TestCountStudentFiltered(t *testing.T) {
 	fmt.Println(totalFiltered, "==", totalRegistrations)
 	assert.Equal(t, totalFiltered, totalRegistrations)
 
+}
+
+func TestData(t *testing.T) {
+	assert.Less(t, 1, 2)
+	assert.Less(t, 4, 2)
+	assert.Less(t, 2, 5)
 }

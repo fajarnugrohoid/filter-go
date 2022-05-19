@@ -13,6 +13,22 @@ var singleInstance *logrus.Logger
 
 var Arg1 *string
 
+type ErrorHook struct {
+}
+
+func (h *ErrorHook) Levels() []logrus.Level {
+	// fire only on ErrorLevel (.Error(), .Errorf(), etc.)
+	return []logrus.Level{logrus.ErrorLevel}
+}
+
+func (h *ErrorHook) Fire(e *logrus.Entry) error {
+	// e.Data is a map with all fields attached to entry
+	if _, ok := e.Data["severity"]; !ok {
+		e.Data["severity"] = "normal"
+	}
+	return nil
+}
+
 func InstanceLogger(arg string) *logrus.Logger {
 	if singleInstance == nil {
 		lock.Lock()
@@ -20,6 +36,7 @@ func InstanceLogger(arg string) *logrus.Logger {
 		if singleInstance == nil {
 			fmt.Println("Creating single instance now.")
 			singleInstance = logrus.New()
+			//singleInstance.WithField("message-and-stack", fmt.Sprintf("%+v", err)).Errorf("%v", err)
 
 			// get the location
 			location, _ := time.LoadLocation("Asia/Jakarta")
@@ -43,6 +60,7 @@ func InstanceLogger(arg string) *logrus.Logger {
 			if os.Getenv("LOGGING") == "file" {
 				singleInstance.SetOutput(file)
 				singleInstance.SetLevel(logrus.DebugLevel)
+				singleInstance.AddHook(&ErrorHook{})
 			}
 
 		} else {

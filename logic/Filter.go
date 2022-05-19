@@ -55,39 +55,57 @@ func (ppdbOptions *models.PpdbOptionList) ProcessFilter(status bool) []models.Pp
 	}
 	return ppdbOptions
 } */
-func DoFilter(optionTypes map[string][]*models.PpdbOption, logger *logrus.Logger) map[string][]*models.PpdbOption {
-	optionTypes["abk"] = Filter1Options(optionTypes, "abk", 0, logger)
+func DoFilterSenior(optionTypes map[string][]*models.PpdbOption, logger *logrus.Logger) map[string][]*models.PpdbOption {
+	optionTypes["abk"] = Filter1Options(optionTypes, "abk", 0, logger) //no.1
 	for i := 0; i < len(optionTypes["abk"]); i++ {
 		fmt.Println("", optionTypes["abk"][i].Name, "-Q:", optionTypes["abk"][i].Quota, "R:", len(optionTypes["abk"][i].PpdbRegistration))
 	}
-	SendQuota(optionTypes, "abk", "ketm", logger)
+	SendAllQuota(optionTypes, "abk", "ketm", logger) //no.1
 	//os.Exit(0)
-	optionTypes = Doing2OptionsShareQuota(optionTypes, logger)
+	optionTypes = Doing2OptionsShareQuota(optionTypes, "ketm", "kondisi-tertentu", logger) //no.1
+
+	optionTypes = Doing2OptionsShareQuota(optionTypes, "anak-guru", "perpindahan", logger) //no.2
+
+	optionTypes, _ = CheckQuota(optionTypes, "anak-guru", "kondisi-tertentu", false, logger)   //no.4
+	optionTypes, _ = CheckQuota(optionTypes, "anak-guru", "ketm", false, logger)               //no.4
+	optionTypes, _ = CheckQuota(optionTypes, "perpindahan", "kondisi-tertentu", false, logger) //no.4
+	optionTypes, _ = CheckQuota(optionTypes, "perpindahan", "ketm", false, logger)
+	optionTypes["anak-guru"] = Filter1Options(optionTypes, "anak-guru", 0, logger)     //no.4
+	optionTypes["perpindahan"] = Filter1Options(optionTypes, "perpindahan", 0, logger) //no.4
+
+	SendAllQuota(optionTypes, "ketm", "prestasi-rapor", logger)             //no.5
+	SendAllQuota(optionTypes, "kondisi-tertentu", "prestasi-rapor", logger) //no.5
+
+	optionTypes = Doing2OptionsShareQuota(optionTypes, "prestasi-rapor", "perlombaan", logger) //no.3
+
+	//tinggal semua sisa dikirim ke tahap 2 (zonasi)
+
 	return optionTypes
 }
 
-func Doing2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, logger *logrus.Logger) map[string][]*models.PpdbOption {
-	optionTypes["ketm"] = RunFilter(optionTypes, "ketm", 0, logger)
-	optionTypes["kondisi-tertentu"] = RunFilter(optionTypes, "kondisi-tertentu", 0, logger)
+func Doing2OptionsShareQuota(optionTypes map[string][]*models.PpdbOption, optType1 string, optType2 string, logger *logrus.Logger) map[string][]*models.PpdbOption {
+	optionTypes[optType1] = RunFilter(optionTypes, optType1, 0, logger)
+	optionTypes[optType2] = RunFilter(optionTypes, optType2, 0, logger)
 
-	for i := 0; i < len(optionTypes["ketm"]); i++ {
-		fmt.Println("", optionTypes["ketm"][i].Name, "-Q:", optionTypes["ketm"][i].Quota, "R:", len(optionTypes["ketm"][i].PpdbRegistration))
+	for i := 0; i < len(optionTypes[optType1]); i++ {
+		fmt.Println("", optionTypes[optType1][i].Name, "-Q:", optionTypes[optType1][i].Quota, "R:", len(optionTypes[optType1][i].PpdbRegistration))
 	}
-	for i := 0; i < len(optionTypes["kondisi-tertentu"]); i++ {
-		fmt.Println("", optionTypes["kondisi-tertentu"][i].Name, "-Q:", optionTypes["kondisi-tertentu"][i].Quota, "R:", len(optionTypes["kondisi-tertentu"][i].PpdbRegistration))
+	for i := 0; i < len(optionTypes[optType2]); i++ {
+		fmt.Println("", optionTypes[optType2][i].Name, "-Q:", optionTypes[optType2][i].Quota, "R:", len(optionTypes[optType2][i].PpdbRegistration))
 	}
 
 	//share quota
 	var reFilterKondisiTertentu, reFilterKetm bool
 
-	optionTypes, reFilterKetm = CheckQuota(optionTypes, "ketm", "kondisi-tertentu", false, logger)
-	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, "kondisi-tertentu", "ketm", false, logger)
+	optionTypes, reFilterKetm = CheckQuota(optionTypes, optType1, optType2, false, logger)
+	optionTypes, reFilterKondisiTertentu = CheckQuota(optionTypes, optType2, optType1, false, logger)
 
-	optionTypes["ketm"] = RunFilter(optionTypes, "ketm", 1, logger)
-	optionTypes["kondisi-tertentu"] = RunFilter(optionTypes, "kondisi-tertentu", 1, logger)
+	optionTypes[optType1] = RunFilter(optionTypes, optType1, 1, logger)
+	optionTypes[optType2] = RunFilter(optionTypes, optType2, 1, logger)
 
 	if reFilterKondisiTertentu == true || reFilterKetm == true {
-		return DoFilter(optionTypes, logger)
+		return Doing2OptionsShareQuota(optionTypes, optType1, optType2, logger)
+
 	}
 
 	return optionTypes
@@ -113,7 +131,6 @@ func RunFilter(optionTypes map[string][]*models.PpdbOption, optType string, loop
 	} else if optType == "kondisi-tertentu" {
 		go getFiltered(messages, optionTypes["kondisi-tertentu"])
 		logger.Info("go done getFiltered")
-
 	}
 	logger.Info("go done getFiltered")
 	data := <-messages // read from channel a
