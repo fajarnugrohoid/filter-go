@@ -79,8 +79,8 @@ func main() {
 		panic(err)
 	}
 	defer client.Disconnect(ctx)
-
-	database := client.Database("ppdb21")
+	fmt.Println("DB:", os.Getenv("DATABASE"))
+	database := client.Database(os.Getenv("DATABASE"))
 
 	var schoolOption []domain.PpdbOption
 	var optionTypes map[string][]*domain.PpdbOption
