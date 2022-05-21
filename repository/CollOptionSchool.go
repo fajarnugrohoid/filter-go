@@ -1,8 +1,8 @@
-package collection
+package repository
 
 import (
 	"context"
-	"filterisasi/models"
+	"filterisasi/models/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -39,7 +39,7 @@ import (
 	]);
 */
 
-func GetSchoolAndOption(ctx context.Context, database *mongo.Database) []models.PpdbOption {
+func GetSchoolAndOption(ctx context.Context, database *mongo.Database) []domain.PpdbOption {
 
 	//var obj1, _ = primitive.ObjectIDFromHex("608f879478c5383cc367ce62")
 
@@ -125,7 +125,7 @@ func GetSchoolAndOption(ctx context.Context, database *mongo.Database) []models.
 	}
 
 	//var showsWithInfo []bson.M
-	var showsWithInfo []models.PpdbOption
+	var showsWithInfo []domain.PpdbOption
 
 	if err = showInfoCursor.All(ctx, &showsWithInfo); err != nil {
 		panic(err)

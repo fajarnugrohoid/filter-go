@@ -1,4 +1,4 @@
-package models
+package domain
 
 type OptionType struct {
 	Name    string

@@ -1,25 +1,34 @@
-package repositories
+package controller
 
 import (
 	"context"
-	"filterisasi/collection"
-	"filterisasi/models"
+	"filterisasi/models/domain"
+	"filterisasi/service"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func InitData(ctx context.Context, database *mongo.Database, optionTypes map[string][]*models.PpdbOption, schoolOption []models.PpdbOption) map[string][]*models.PpdbOption {
+type InitialControllerImpl struct {
+	PpdbRegistrationService service.PpdbRegistrationService
+}
+
+func NewInitialController(ppdbRegistrationService service.PpdbRegistrationService) InitialController {
+	return &InitialControllerImpl{PpdbRegistrationService: ppdbRegistrationService}
+}
+
+func (controller InitialControllerImpl) InitData(ctx context.Context, optionTypes map[string][]*domain.PpdbOption, schoolOption []domain.PpdbOption) map[string][]*domain.PpdbOption {
+	//TODO implement me
 	for _, opt := range schoolOption {
 
 		fmt.Printf(opt.Id.String())
 
-		var studentRegistrations []models.PpdbRegistration
-		studentRegistrations = collection.GetRegistrations(ctx, database, "sma", opt.Id)
-		studentHistories := make([]models.PpdbRegistration, len(studentRegistrations), cap(studentRegistrations))
+		var studentRegistrations []domain.PpdbRegistration
+		//studentRegistrations = repository.GetRegistrations(ctx, database, "sma", opt.Id)
+		studentRegistrations = controller.PpdbRegistrationService.FindByFirstChoiceLevel(ctx, "sma", opt.Id)
+		studentHistories := make([]domain.PpdbRegistration, len(studentRegistrations), cap(studentRegistrations))
 		copy(studentHistories, studentRegistrations)
 
-		tmpOpt := &models.PpdbOption{
+		tmpOpt := &domain.PpdbOption{
 			Id:                  opt.Id,
 			Name:                opt.Name,
 			Quota:               opt.Quota,
@@ -30,113 +39,8 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 			NeedQuota:           0,
 			PpdbRegistration:    studentRegistrations,
 			RegistrationHistory: studentHistories,
-			HistoryShifting:     make([]models.PpdbRegistration, 0),
+			HistoryShifting:     make([]domain.PpdbRegistration, 0),
 		}
-		/*
-			tmpOptAbk := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptKetm := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptKondisiTertentu := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptPerpindahan := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptAnakGuru := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptRaporUmum := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptPerlombaan := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}
-			tmpOptZonasi := &models.PpdbOption{
-				Id:                  opt.Id,
-				Name:                opt.Name,
-				Quota:               opt.Quota,
-				Type:                opt.Type,
-				AddQuota:            0,
-				Filtered:            0,
-				UpdateQuota:         true,
-				NeedQuota:   0,
-				PpdbRegistration:    studentRegistrations,
-				RegistrationHistory: studentHistories,
-				HistoryShifting:     make([]models.PpdbRegistration, 0),
-			}*/
 
 		switch opt.Type {
 		case "abk":
@@ -187,7 +91,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		TmpIdSMKPrestasiIndustri, _ := primitive.ObjectIDFromHex("000000000000000000000028")
 		TmpIdSMKPrestasiNilaiRapor, _ := primitive.ObjectIDFromHex("000000000000000000000029")
 	*/
-	tmpSMAAbk := &models.PpdbOption{
+	tmpSMAAbk := &domain.PpdbOption{
 		Id:                  TmpIdSMAAbk,
 		Name:                "TemporarySMAAbk",
 		Type:                "abk",
@@ -198,7 +102,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAKetm := &models.PpdbOption{
+	tmpSMAKetm := &domain.PpdbOption{
 		Id:                  TmpIdSMAKetm,
 		Name:                "TemporarySMAKetm",
 		Type:                "ketm",
@@ -209,7 +113,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAKondisiTertentu := &models.PpdbOption{
+	tmpSMAKondisiTertentu := &domain.PpdbOption{
 		Id:                  TmpIdSMAKondisiTertentu,
 		Name:                "TemporarySMAKondisiTertentu",
 		Type:                "kondisi-tertentu",
@@ -220,7 +124,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAPerpindahan := &models.PpdbOption{
+	tmpSMAPerpindahan := &domain.PpdbOption{
 		Id:                  TmpIdSMAPerpindahan,
 		Name:                "TemporarySMAPerpindahan",
 		Type:                "perpindahan",
@@ -231,7 +135,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAAnakGuru := &models.PpdbOption{
+	tmpSMAAnakGuru := &domain.PpdbOption{
 		Id:                  TmpIdSMAAnakGuru,
 		Name:                "TemporarySMAAnakGuru",
 		Type:                "anak-guru",
@@ -242,7 +146,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAPrestasiNilaiRapor := &models.PpdbOption{
+	tmpSMAPrestasiNilaiRapor := &domain.PpdbOption{
 		Id:                  TmpIdSMAPrestasiNilaiRapor,
 		Name:                "TemporarySMAPrestasiNilaiRapor",
 		Type:                "rapor-umum",
@@ -253,7 +157,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAPrestasiPerlombaan := &models.PpdbOption{
+	tmpSMAPrestasiPerlombaan := &domain.PpdbOption{
 		Id:                  TmpIdSMAPrestasiPerlombaan,
 		Name:                "TemporarySMAPrestasiPerlombaan",
 		Type:                "perlombaan",
@@ -264,7 +168,7 @@ func InitData(ctx context.Context, database *mongo.Database, optionTypes map[str
 		RegistrationHistory: nil,
 		HistoryShifting:     nil,
 	}
-	tmpSMAZonasi := &models.PpdbOption{
+	tmpSMAZonasi := &domain.PpdbOption{
 		Id:                  TmpIdSMAZonasi,
 		Name:                "TemporarySMAZonasi",
 		Type:                "zonasi",

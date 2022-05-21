@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"filterisasi/collection"
+	"filterisasi/controller"
+	"filterisasi/helper"
 	"filterisasi/logic"
-	"filterisasi/models"
-	"filterisasi/repositories"
-	"filterisasi/utility"
+	"filterisasi/models/domain"
+	"filterisasi/repository"
+	"filterisasi/service"
 	"fmt"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,6 +16,22 @@ import (
 	"os"
 	"time"
 )
+
+func NewDatabase(ctx context.Context, url string) (*mongo.Database, context.Context) {
+
+	fmt.Println("ctx:", ctx)
+	fmt.Println("url:", url)
+	//ctx, _ := context.WithTimeout(context.Background(), 200*time.Second)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
+	if err != nil {
+		panic(err)
+	}
+	defer client.Disconnect(ctx)
+
+	database := client.Database("ppdb21")
+
+	return database, ctx
+}
 
 func main() {
 
@@ -46,13 +63,18 @@ func main() {
 		}
 		logger.Info("hello logging") */
 
-	utility.SetLogArg(arg)
+	helper.SetLogArg(arg)
 
-	logger := utility.InstanceLogger(utility.GetLogArg())
+	logger := helper.InstanceLogger(helper.GetLogArg())
 
 	ctx := context.Background()
+	url := os.Getenv("URL")
+	//database, ctx := NewDatabase(ctx, os.Getenv("URL"))
+
+	fmt.Println("ctx:", ctx)
+	fmt.Println("url:", url)
 	//ctx, _ := context.WithTimeout(context.Background(), 200*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("URL")))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
 	if err != nil {
 		panic(err)
 	}
@@ -60,18 +82,23 @@ func main() {
 
 	database := client.Database("ppdb21")
 
-	var schoolOption []models.PpdbOption
-	var optionTypes map[string][]*models.PpdbOption
-	optionTypes = map[string][]*models.PpdbOption{}
+	var schoolOption []domain.PpdbOption
+	var optionTypes map[string][]*domain.PpdbOption
+	optionTypes = map[string][]*domain.PpdbOption{}
 
-	schoolOption = collection.GetSchoolAndOption(ctx, database)
+	fmt.Println("database:", database)
+	schoolOption = repository.GetSchoolAndOption(ctx, database)
 	if err != nil {
 		panic(err)
 	}
 
 	logger.Info(len(schoolOption))
 
-	optionTypes = repositories.InitData(ctx, database, optionTypes, schoolOption)
+	ppdbRegistrationRepository := repository.NewPpdbRegistrationRepositoy()
+	ppdbRegistrationService := service.NewPpdbRegistrationService(ppdbRegistrationRepository, database)
+	initialController := controller.NewInitialController(ppdbRegistrationService)
+	optionTypes = initialController.InitData(ctx, optionTypes, schoolOption)
+
 	logger.Info("len abk:", len(optionTypes["abk"]))
 	logger.Info("len ketm:", len(optionTypes["ketm"]))
 	for i, opt := range optionTypes["ketm"] {
@@ -111,7 +138,7 @@ func main() {
 		)
 	}
 
-	repositories.UpdateFilteredStatistic(ctx, database, optionTypes, logger)
+	controller.UpdateFilteredStatistic(ctx, database, optionTypes, logger)
 
 	timeElapsed := time.Since(start)
 	logger.Info("The `for` loop took %s", timeElapsed)

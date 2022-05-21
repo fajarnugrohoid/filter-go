@@ -1,8 +1,8 @@
-package collection
+package repository
 
 import (
 	"context"
-	"filterisasi/models"
+	"filterisasi/models/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func GetRegistrations(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []models.PpdbRegistration {
+func GetRegistrations(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []domain.PpdbRegistration {
 
 	//var optId = [1]primitive.ObjectID{firstChoice}
 	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
@@ -25,16 +25,16 @@ func GetRegistrations(ctx context.Context, database *mongo.Database, level strin
 	}
 	defer csr.Close(ctx)
 
-	result := make([]models.PpdbRegistration, 0)
+	result := make([]domain.PpdbRegistration, 0)
 	for csr.Next(ctx) {
-		var row models.PpdbRegistration
+		var row domain.PpdbRegistration
 
 		err := csr.Decode(&row)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		tmp := models.PpdbRegistration{
+		tmp := domain.PpdbRegistration{
 			Id:                 row.Id,
 			Name:               row.Name,
 			OptionType:         row.OptionType,

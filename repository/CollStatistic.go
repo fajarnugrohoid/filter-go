@@ -1,8 +1,8 @@
-package collection
+package repository
 
 import (
 	"context"
-	"filterisasi/models"
+	"filterisasi/models/domain"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func InsertStatistic(ctx context.Context, database *mongo.Database, ppdbStatistics []models.PpdbStatistic, option_type string) {
+func InsertStatistic(ctx context.Context, database *mongo.Database, ppdbStatistics []domain.PpdbStatistic, option_type string) {
 
 	DeleteStatisticByOptionType(ctx, database, option_type)
 
@@ -41,7 +41,7 @@ func DeleteStatisticByOptionType(ctx context.Context, database *mongo.Database, 
 	}
 }
 
-func GetAllStatistic(ctx context.Context, database *mongo.Database, optionType string) []models.PpdbStatistic {
+func GetAllStatistic(ctx context.Context, database *mongo.Database, optionType string) []domain.PpdbStatistic {
 
 	criteria := bson.M{"option_type": optionType}
 	findOptions := options.Find()
@@ -52,16 +52,16 @@ func GetAllStatistic(ctx context.Context, database *mongo.Database, optionType s
 	}
 	defer csr.Close(ctx)
 
-	result := make([]models.PpdbStatistic, 0)
+	result := make([]domain.PpdbStatistic, 0)
 	for csr.Next(ctx) {
-		var row models.PpdbStatistic
+		var row domain.PpdbStatistic
 
 		err := csr.Decode(&row)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		tmp := models.PpdbStatistic{
+		tmp := domain.PpdbStatistic{
 			Id:         row.Id,
 			Name:       row.Name,
 			OptionType: row.OptionType,
@@ -73,7 +73,7 @@ func GetAllStatistic(ctx context.Context, database *mongo.Database, optionType s
 	return result
 }
 
-func GetStatisticById(ctx context.Context, database *mongo.Database, optionType string, id primitive.ObjectID) []models.PpdbStatistic {
+func GetStatisticById(ctx context.Context, database *mongo.Database, optionType string, id primitive.ObjectID) []domain.PpdbStatistic {
 
 	criteria := bson.M{"option_type": optionType, "_id": id}
 	findOptions := options.Find()
@@ -84,16 +84,16 @@ func GetStatisticById(ctx context.Context, database *mongo.Database, optionType 
 	}
 	defer csr.Close(ctx)
 
-	result := make([]models.PpdbStatistic, 0)
+	result := make([]domain.PpdbStatistic, 0)
 	for csr.Next(ctx) {
-		var row models.PpdbStatistic
+		var row domain.PpdbStatistic
 
 		err := csr.Decode(&row)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		tmp := models.PpdbStatistic{
+		tmp := domain.PpdbStatistic{
 			Id:         row.Id,
 			Name:       row.Name,
 			OptionType: row.OptionType,

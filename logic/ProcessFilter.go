@@ -1,19 +1,26 @@
 package logic
 
 import (
-	"filterisasi/models"
-	"filterisasi/repositories"
+	"filterisasi/controller"
+	"filterisasi/helper"
+	"filterisasi/models/domain"
 	"github.com/sirupsen/logrus"
 )
 
-func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logger *logrus.Logger) []*models.PpdbOption {
+func ProcessFilter(optionList []*domain.PpdbOption, status bool, loop int, logger *logrus.Logger) []*domain.PpdbOption {
 	var nextOptIdx int
 	var histIdxStd int
 
 	for curOptIdx := 0; curOptIdx < len(optionList); curOptIdx++ {
 		//fmt.Println("ProcessFilter:", optionList[i].Id)
 		if optionList[curOptIdx].Filtered == 0 {
-			models.SortByDistanceAndAge(optionList[curOptIdx].PpdbRegistration)
+			if optionList[curOptIdx].Type == "anak-guru" {
+				helper.SortByAnakGuruAndAge(optionList[curOptIdx].PpdbRegistration)
+			} else if optionList[curOptIdx].Type == "rapor" || optionList[curOptIdx].Type == "prestasi" {
+				helper.SortByScoreAndAge(optionList[curOptIdx].PpdbRegistration)
+			} else {
+				helper.SortByDistanceAndAge(optionList[curOptIdx].PpdbRegistration)
+			}
 
 			logger.Debug("afterSortByDistanceAndAge")
 			logger.Debug(optionList[curOptIdx].Id, " - ", optionList[curOptIdx].Name,
@@ -37,8 +44,8 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 				x := 0
 				for curIdxStd := optionList[curOptIdx].Quota; curIdxStd < len(optionList[curOptIdx].PpdbRegistration); curIdxStd++ { ////cut siswa yg lebih dari quota move to sec, third choice
 
-					firstOptIdx := models.FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].FirstChoiceOption, optionList)
-					histIdxStd = models.FindIndexStudent(optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, optionList[firstOptIdx].RegistrationHistory)
+					firstOptIdx := domain.FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].FirstChoiceOption, optionList)
+					histIdxStd = domain.FindIndexStudent(optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, optionList[firstOptIdx].RegistrationHistory)
 					logger.Debug(x, "-findIdxStd:",
 						optionList[curOptIdx].Name, "-",
 						optionList[curOptIdx].PpdbRegistration[curIdxStd].Id, "-",
@@ -51,7 +58,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 
 					if optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus == 0 {
 
-						nextOptIdx = models.FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, optionList)
+						nextOptIdx = domain.FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, optionList)
 
 						/*
 							optionList[i].PpdbRegistration[j].AcceptedStatus = 1
@@ -62,7 +69,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].SecondChoiceOption
 						*/
 						//UpdateMoveStudent(optionList, curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 1)
-						dataChange := repositories.StudentUpdate{
+						dataChange := controller.StudentUpdate{
 							CurOptIdx:     curOptIdx,
 							NextOptIdx:    nextOptIdx,
 							FirstOptIdx:   firstOptIdx,
@@ -72,7 +79,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							NextOptChoice: optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance2,
 						}
-						repositories.UpdateMoveStudent(optionList, dataChange)
+						controller.UpdateMoveStudent(optionList, dataChange)
 						logger.Debug("          >sec ori:", curIdxStd, ":",
 							optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-",
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].Name, "-",
@@ -81,7 +88,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 
 					} else if optionList[curOptIdx].PpdbRegistration[curIdxStd].AcceptedStatus == 1 {
 
-						nextOptIdx = models.FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].ThirdChoiceOption, optionList)
+						nextOptIdx = domain.FindIndex(optionList[curOptIdx].PpdbRegistration[curIdxStd].ThirdChoiceOption, optionList)
 						/*
 							optionList[i].PpdbRegistration[j].AcceptedStatus = 2
 							optionList[i].PpdbRegistration[j].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
@@ -92,7 +99,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							optionList[optIdxFirstChoice].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[i].PpdbRegistration[j].ThirdChoiceOption
 						*/
 						// curOptIdx, nextOptIdx, firstOptIdx, j, histIdxStd, 2
-						dataChange := repositories.StudentUpdate{
+						dataChange := controller.StudentUpdate{
 							CurOptIdx:     curOptIdx,
 							NextOptIdx:    nextOptIdx,
 							FirstOptIdx:   firstOptIdx,
@@ -102,7 +109,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							NextOptChoice: optionList[curOptIdx].PpdbRegistration[curIdxStd].ThirdChoiceOption,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
-						repositories.UpdateMoveStudent(optionList, dataChange)
+						controller.UpdateMoveStudent(optionList, dataChange)
 						logger.Debug("          >third ori:", curIdxStd, ":", optionList[curOptIdx].PpdbRegistration[curIdxStd].Name, "-", optionList[curOptIdx].PpdbRegistration[curIdxStd].SecondChoiceOption, " - ", nextOptIdx)
 					} else {
 						nextOptIdx = len(optionList) - 1
@@ -113,7 +120,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[nextOptIdx].Id
 						*/
-						dataChange := repositories.StudentUpdate{
+						dataChange := controller.StudentUpdate{
 							CurOptIdx:     curOptIdx,
 							NextOptIdx:    nextOptIdx,
 							FirstOptIdx:   firstOptIdx,
@@ -123,7 +130,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							NextOptChoice: optionList[nextOptIdx].Id,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
-						repositories.UpdateMoveStudent(optionList, dataChange)
+						controller.UpdateMoveStudent(optionList, dataChange)
 					}
 
 					if nextOptIdx == -1 || nextOptIdx == len(optionList)-1 { //jika tidak ada option dan telah dilempar ke pembuangan
@@ -139,7 +146,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedIndex = nextOptIdx
 							optionList[firstOptIdx].RegistrationHistory[histIdxStd].AcceptedChoiceId = optionList[len(optionList)-1].Id
 						*/
-						dataChange := repositories.StudentUpdate{
+						dataChange := controller.StudentUpdate{
 							CurOptIdx:     curOptIdx,
 							NextOptIdx:    nextOptIdx,
 							FirstOptIdx:   firstOptIdx,
@@ -149,7 +156,7 @@ func ProcessFilter(optionList []*models.PpdbOption, status bool, loop int, logge
 							NextOptChoice: optionList[nextOptIdx].Id,
 							Distance:      optionList[curOptIdx].PpdbRegistration[curIdxStd].Distance3,
 						}
-						repositories.UpdateMoveStudent(optionList, dataChange)
+						controller.UpdateMoveStudent(optionList, dataChange)
 
 						optionList[len(optionList)-1].AddStd(optionList[curOptIdx].PpdbRegistration[curIdxStd], logger)
 						optionList[curOptIdx].RemoveStd(curIdxStd, logger)

@@ -1,4 +1,4 @@
-package models
+package domain
 
 type PpdbSchool struct {
 	Type  string `bson:"type,omitempty"`

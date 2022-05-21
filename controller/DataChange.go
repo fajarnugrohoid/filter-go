@@ -1,7 +1,7 @@
-package repositories
+package controller
 
 import (
-	"filterisasi/models"
+	"filterisasi/models/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,7 +17,7 @@ type StudentUpdate struct {
 	Distance      float64
 }
 
-func UpdateMoveStudent(optionList []*models.PpdbOption, d StudentUpdate) {
+func UpdateMoveStudent(optionList []*domain.PpdbOption, d StudentUpdate) {
 	optionList[d.CurOptIdx].PpdbRegistration[d.CurIdxStd].AcceptedStatus = d.AccStatus
 	optionList[d.CurOptIdx].PpdbRegistration[d.CurIdxStd].AcceptedIndex = d.NextOptIdx
 	//optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].AcceptedChoiceId = optionList[d.curOptIdx].PpdbRegistration[d.curIdxStd].SecondChoiceOption
@@ -30,7 +30,7 @@ func UpdateMoveStudent(optionList []*models.PpdbOption, d StudentUpdate) {
 }
 
 //tarik siswa semua siswa yg terlempar ke pilihan pertama
-func UpdatePullStudentFirstChoice(optionList []*models.PpdbOption, d StudentUpdate) {
+func UpdatePullStudentFirstChoice(optionList []*domain.PpdbOption, d StudentUpdate) {
 	optionList[d.NextOptIdx].PpdbRegistration[d.NextIdxStd].AcceptedStatus = d.AccStatus
 	optionList[d.NextOptIdx].PpdbRegistration[d.NextIdxStd].AcceptedIndex = d.CurOptIdx
 	optionList[d.NextOptIdx].PpdbRegistration[d.NextIdxStd].AcceptedChoiceId = optionList[d.CurOptIdx].Id
@@ -42,7 +42,7 @@ func UpdatePullStudentFirstChoice(optionList []*models.PpdbOption, d StudentUpda
 }
 
 //tarik siswa ke pilihan sebelumnya yg terlempar ke pilihan yg lebih tinggi (selanjutnya)
-func UpdatePullStudentByChoice(optionList []*models.PpdbOption, d StudentUpdate) {
+func UpdatePullStudentByChoice(optionList []*domain.PpdbOption, d StudentUpdate) {
 	optionList[d.NextOptIdx].PpdbRegistration[d.NextIdxStd].AcceptedStatus = d.AccStatus
 	optionList[d.NextOptIdx].PpdbRegistration[d.NextIdxStd].AcceptedIndex = d.CurOptIdx
 	optionList[d.NextOptIdx].PpdbRegistration[d.NextIdxStd].AcceptedChoiceId = optionList[d.CurOptIdx].Id

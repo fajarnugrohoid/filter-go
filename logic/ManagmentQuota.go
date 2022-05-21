@@ -1,11 +1,11 @@
 package logic
 
 import (
-	"filterisasi/models"
+	"filterisasi/models/domain"
 	"github.com/sirupsen/logrus"
 )
 
-func SendAllQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, logger *logrus.Logger) {
+func SendAllQuota(optionTypes map[string][]*domain.PpdbOption, currentType string, targetType string, logger *logrus.Logger) {
 	for i := 0; i < len(optionTypes[currentType]); i++ {
 		if optionTypes[currentType][i].Quota > len(optionTypes[currentType][i].PpdbRegistration) {
 			sisaQuota := optionTypes[currentType][i].Quota - len(optionTypes[currentType][i].PpdbRegistration)
@@ -16,7 +16,7 @@ func SendAllQuota(optionTypes map[string][]*models.PpdbOption, currentType strin
 	}
 }
 
-func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, reFilter bool, logger *logrus.Logger) (map[string][]*models.PpdbOption, bool) {
+func NeedSuplyQuota1Option(optionTypes map[string][]*domain.PpdbOption, currentType string, targetType string, reFilter bool, logger *logrus.Logger) (map[string][]*domain.PpdbOption, bool) {
 	logger.Info("===========================need quota==============================")
 
 	for i := 0; i < len(optionTypes[currentType]); i++ {
@@ -84,7 +84,7 @@ func CheckQuota(optionTypes map[string][]*models.PpdbOption, currentType string,
 	return optionTypes, reFilter
 }
 
-func ShareQuota3Options(optionTypes map[string][]*models.PpdbOption, currentType string, targetType1 string, targetType2 string, reFilter bool, logger *logrus.Logger) (map[string][]*models.PpdbOption, bool) {
+func NeedSupplyQuota2Options(optionTypes map[string][]*domain.PpdbOption, currentType string, targetType1 string, targetType2 string, reFilter bool, logger *logrus.Logger) (map[string][]*domain.PpdbOption, bool) {
 	logger.Info("===========================need quota==============================")
 
 	for i := 0; i < len(optionTypes[currentType]); i++ {
@@ -141,7 +141,7 @@ func ShareQuota3Options(optionTypes map[string][]*models.PpdbOption, currentType
 	return optionTypes, reFilter
 }
 
-func runCalculateQuota(optionTypes map[string][]*models.PpdbOption, currentType string, targetType string, i int, sisaQuota int, logger *logrus.Logger) (map[string][]*models.PpdbOption, bool) {
+func runCalculateQuota(optionTypes map[string][]*domain.PpdbOption, currentType string, targetType string, i int, sisaQuota int, logger *logrus.Logger) (map[string][]*domain.PpdbOption, bool) {
 	var stillNeedQuota bool
 	if optionTypes[currentType][i].NeedQuota >= sisaQuota {
 		optionTypes[currentType][i].Quota = optionTypes[currentType][i].Quota + sisaQuota

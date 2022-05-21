@@ -1,8 +1,8 @@
-package collection
+package repository
 
 import (
 	"context"
-	"filterisasi/models"
+	"filterisasi/models/domain"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions []*models.PpdbOption, option_type string) {
+func InsertFiltered(ctx context.Context, database *mongo.Database, ppdbOptions []*domain.PpdbOption, option_type string) {
 
 	DeleteFilteredByOptionType(ctx, database, option_type)
 
@@ -71,7 +71,7 @@ func DeleteFilteredByOptionType(ctx context.Context, database *mongo.Database, o
 	}
 }
 
-func GetFiltereds(ctx context.Context, database *mongo.Database, optionType string) []models.PpdbFiltered {
+func GetFiltereds(ctx context.Context, database *mongo.Database, optionType string) []domain.PpdbFiltered {
 
 	//var optId = [1]primitive.ObjectID{firstChoice}
 	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
@@ -85,16 +85,16 @@ func GetFiltereds(ctx context.Context, database *mongo.Database, optionType stri
 	}
 	defer csr.Close(ctx)
 
-	result := make([]models.PpdbFiltered, 0)
+	result := make([]domain.PpdbFiltered, 0)
 	for csr.Next(ctx) {
-		var row models.PpdbFiltered
+		var row domain.PpdbFiltered
 
 		err := csr.Decode(&row)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		tmp := models.PpdbFiltered{
+		tmp := domain.PpdbFiltered{
 			Id:                 row.Id,
 			Name:               row.Name,
 			OptionType:         row.OptionType,
@@ -116,7 +116,7 @@ func GetFiltereds(ctx context.Context, database *mongo.Database, optionType stri
 	return result
 }
 
-func GetFilteredsByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []models.PpdbFiltered {
+func GetFilteredsByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []domain.PpdbFiltered {
 
 	//var optId = [1]primitive.ObjectID{firstChoice}
 	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}
@@ -129,16 +129,16 @@ func GetFilteredsByOpt(ctx context.Context, database *mongo.Database, optionType
 	}
 	defer csr.Close(ctx)
 
-	result := make([]models.PpdbFiltered, 0)
+	result := make([]domain.PpdbFiltered, 0)
 	for csr.Next(ctx) {
-		var row models.PpdbFiltered
+		var row domain.PpdbFiltered
 
 		err := csr.Decode(&row)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		tmp := models.PpdbFiltered{
+		tmp := domain.PpdbFiltered{
 			Id:                 row.Id,
 			Name:               row.Name,
 			OptionType:         row.OptionType,

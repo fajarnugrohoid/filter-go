@@ -1,12 +1,12 @@
 package logic
 
 import (
-	"filterisasi/models"
-	"filterisasi/repositories"
+	"filterisasi/controller"
+	"filterisasi/models/domain"
 	"github.com/sirupsen/logrus"
 )
 
-func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt int, logger *logrus.Logger) []*models.PpdbOption {
+func PullStudentToFirstChoice(optionList []*domain.PpdbOption, currTargetIdxOpt int, logger *logrus.Logger) []*domain.PpdbOption {
 	logger.Debug("currTargetIdxOpt:", currTargetIdxOpt)
 	//pull student from backup history pilihan 1
 
@@ -18,7 +18,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			var nextTargetIdxOpt int
 			if optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex == -1 {
 				nextTargetIdxOpt = len(optionList) - 1
-				targetIdxStd = models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+				targetIdxStd = domain.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 
 				logger.Debug("Yg tidak diterima == :",
 					optionList[currTargetIdxOpt].RegistrationHistory[j].Id,
@@ -29,7 +29,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				)
 			} else {
 				nextTargetIdxOpt = optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex
-				targetIdxStd = models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+				targetIdxStd = domain.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 				logger.Debug("Yg tidak diterima !=:",
 					optionList[currTargetIdxOpt].RegistrationHistory[j].Id,
 					" - ", optionList[currTargetIdxOpt].RegistrationHistory[j].Name,
@@ -48,7 +48,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedIndex = currTargetIdxOpt
 				optionList[currTargetIdxOpt].RegistrationHistory[j].AcceptedChoiceId = optionList[currTargetIdxOpt].Id
 			*/
-			dataChange := repositories.StudentUpdate{
+			dataChange := controller.StudentUpdate{
 				CurOptIdx:     currTargetIdxOpt,
 				NextOptIdx:    nextTargetIdxOpt,
 				NextIdxStd:    targetIdxStd,
@@ -57,7 +57,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				NextOptChoice: optionList[currTargetIdxOpt].Id,
 				Distance:      optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance1,
 			}
-			repositories.UpdatePullStudentFirstChoice(optionList, dataChange)
+			controller.UpdatePullStudentFirstChoice(optionList, dataChange)
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd], logger)
 			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd, logger)
@@ -88,8 +88,8 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 
 		//idxStd := models.FindIndexStudent(optionList[currTargetIdxOpt].RegistrationHistory[j].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 
-		optIdxFirstChoice := models.FindIndex(optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption, optionList)
-		stdIdx := models.FindIndexStudent(optionList[currTargetIdxOpt].HistoryShifting[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
+		optIdxFirstChoice := domain.FindIndex(optionList[currTargetIdxOpt].HistoryShifting[j].FirstChoiceOption, optionList)
+		stdIdx := domain.FindIndexStudent(optionList[currTargetIdxOpt].HistoryShifting[j].Id, optionList[optIdxFirstChoice].RegistrationHistory)
 		logger.Debug("shifting name :", optionList[currTargetIdxOpt].HistoryShifting[j].Name)
 		logger.Debug("optIdxFirstChoice:", optionList[optIdxFirstChoice].Name, " stdIdx:", stdIdx)
 
@@ -97,7 +97,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 			logger.Debug("levelAcc:", levelAcc)
 			nextTargetIdxOpt := optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].AcceptedIndex
 			logger.Debug("nextTargetIdxOpt.len:", len(optionList[nextTargetIdxOpt].PpdbRegistration))
-			targetIdxStd := models.FindIndexStudentTest(optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
+			targetIdxStd := domain.FindIndexStudentTest(optionList[optIdxFirstChoice].RegistrationHistory[stdIdx].Id, optionList[nextTargetIdxOpt].PpdbRegistration)
 			logger.Debug("nextTargetIdxOpt:", nextTargetIdxOpt, " ", optionList[nextTargetIdxOpt].Name, " targetIdxStd:", targetIdxStd)
 
 			/*
@@ -123,7 +123,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				tmpDistance = optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd].Distance3
 			}
 
-			dataChange := repositories.StudentUpdate{
+			dataChange := controller.StudentUpdate{
 				FirstOptIdx:   optIdxFirstChoice,
 				AccStatus:     levelAcc,
 				HistIdxStd:    stdIdx,
@@ -133,7 +133,7 @@ func PullStudentToFirstChoice(optionList []*models.PpdbOption, currTargetIdxOpt 
 				NextOptChoice: optionList[currTargetIdxOpt].Id,
 				Distance:      tmpDistance,
 			}
-			repositories.UpdatePullStudentByChoice(optionList, dataChange)
+			controller.UpdatePullStudentByChoice(optionList, dataChange)
 
 			optionList[currTargetIdxOpt].AddStd(optionList[nextTargetIdxOpt].PpdbRegistration[targetIdxStd], logger)
 			optionList[nextTargetIdxOpt].RemoveStd(targetIdxStd, logger)

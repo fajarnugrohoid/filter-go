@@ -1,4 +1,4 @@
-package models
+package domain
 
 type PpdbOptionList struct {
 	Options []*PpdbOption
