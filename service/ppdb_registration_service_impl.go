@@ -21,7 +21,7 @@ func (service *PpdbRegistrationServiceImpl) FindByFirstChoiceLevel(ctx context.C
 	//TODO implement me
 	// transaction
 	db := service.DB
-	ppdbRegistrations := service.PpdbRegistrationRepository.FindByFirstChoiceLevel(ctx, db, level, firstChoice)
+	ppdbRegistrations := service.PpdbRegistrationRepository.GetByFirstChoiceLevel(ctx, db, level, firstChoice)
 	/*
 		err = database.Client().UseSession(ctx, func(sessionContext mongo.SessionContext) error {
 			err := sessionContext.StartTransaction()

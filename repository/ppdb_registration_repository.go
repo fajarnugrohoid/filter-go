@@ -11,6 +11,6 @@ type PpdbRegistrationRepositoy interface {
 	Save(ctx context.Context, database *mongo.Database, category domain.PpdbRegistration) domain.PpdbRegistration
 	Update(ctx context.Context, database *mongo.Database, category domain.PpdbRegistration) domain.PpdbRegistration
 	Delete(ctx context.Context, database *mongo.Database, category domain.PpdbRegistration)
-	FindByFirstChoiceLevel(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []domain.PpdbRegistration
-	FindAll(ctx context.Context, database *mongo.Database) []domain.PpdbRegistration
+	GetByFirstChoiceLevel(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []domain.PpdbRegistration
+	GetAll(ctx context.Context, database *mongo.Database) []domain.PpdbRegistration
 }

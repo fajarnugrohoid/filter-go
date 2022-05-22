@@ -18,7 +18,7 @@ func NewPpdbFilteredRepository() PpdbFilteredRepository {
 	return &PpdbFilteredRepositoryImpl{}
 }
 
-func (filtered PpdbFilteredRepositoryImpl) Save(ctx context.Context, database *mongo.Database, ppdbOptions []*domain.PpdbOption, optionType string) {
+func (filtered PpdbFilteredRepositoryImpl) Save(ctx context.Context, database *mongo.Database, ppdbOptions []*domain.PpdbOption, optionType string) (*mongo.InsertManyResult, error) {
 	//TODO implement me
 	filtered.DeleteByOptionType(ctx, database, optionType)
 
@@ -43,7 +43,8 @@ func (filtered PpdbFilteredRepositoryImpl) Save(ctx context.Context, database *m
 		panic(err)
 	}
 	// display the ids of the newly inserted objects
-	fmt.Println(results.InsertedIDs)
+	//fmt.Println(results.InsertedIDs)
+	return results, err
 }
 
 func (p PpdbFilteredRepositoryImpl) DeleteByOptionType(ctx context.Context, database *mongo.Database, option_type string) {
@@ -62,7 +63,7 @@ func (p PpdbFilteredRepositoryImpl) DeleteByOptionType(ctx context.Context, data
 	}
 }
 
-func (filtered PpdbFilteredRepositoryImpl) FindsByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []domain.PpdbFiltered {
+func (filtered PpdbFilteredRepositoryImpl) GetByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []domain.PpdbFiltered {
 	//TODO implement me
 	//var optId = [1]primitive.ObjectID{firstChoice}
 	//criteria := bson.M{"first_choice_option": firstChoice, "registration_level": "sma", "status": "fit"}

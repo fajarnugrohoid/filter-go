@@ -8,7 +8,7 @@ import (
 )
 
 type PpdbFilteredRepository interface {
-	Save(ctx context.Context, database *mongo.Database, ppdbOptions []*domain.PpdbOption, optionType string)
+	Save(ctx context.Context, database *mongo.Database, ppdbOptions []*domain.PpdbOption, optionType string) (*mongo.InsertManyResult, error)
 	DeleteByOptionType(ctx context.Context, database *mongo.Database, option_type string)
-	FindsByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []domain.PpdbFiltered
+	GetByOpt(ctx context.Context, database *mongo.Database, optionType string, optId primitive.ObjectID) []domain.PpdbFiltered
 }

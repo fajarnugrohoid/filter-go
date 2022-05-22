@@ -95,8 +95,13 @@ func main() {
 	logger.Info(len(schoolOption))
 
 	ppdbRegistrationRepository := repository.NewPpdbRegistrationRepositoy()
+	ppdbFilteredRepository := repository.NewPpdbFilteredRepository()
+
 	ppdbRegistrationService := service.NewPpdbRegistrationService(ppdbRegistrationRepository, database)
+	ppdbFilteredService := service.NewPpdbFilteredService(ppdbFilteredRepository, database)
+
 	initialController := controller.NewInitialController(ppdbRegistrationService)
+	finishController := controller.NewFinishController(ppdbFilteredService)
 	optionTypes = initialController.InitData(ctx, optionTypes, schoolOption)
 
 	logger.Info("len abk:", len(optionTypes["abk"]))
@@ -138,7 +143,7 @@ func main() {
 		)
 	}
 
-	controller.UpdateFilteredStatistic(ctx, database, optionTypes, logger)
+	finishController.UpdateFiltered(ctx, optionTypes)
 
 	timeElapsed := time.Since(start)
 	logger.Info("The `for` loop took %s", timeElapsed)

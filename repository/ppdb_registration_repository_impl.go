@@ -32,7 +32,7 @@ func (p *PpdbRegistrationRepositoyImpl) Delete(ctx context.Context, database *mo
 	panic("implement me")
 }
 
-func (p *PpdbRegistrationRepositoyImpl) FindByFirstChoiceLevel(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []domain.PpdbRegistration {
+func (p *PpdbRegistrationRepositoyImpl) GetByFirstChoiceLevel(ctx context.Context, database *mongo.Database, level string, firstChoice primitive.ObjectID) []domain.PpdbRegistration {
 	//TODO implement me
 	criteria := bson.M{"first_choice_option": firstChoice, "registration_level": level}
 	findOptions := options.Find()
@@ -77,7 +77,7 @@ func (p *PpdbRegistrationRepositoyImpl) FindByFirstChoiceLevel(ctx context.Conte
 	return result
 }
 
-func (p *PpdbRegistrationRepositoyImpl) FindAll(ctx context.Context, database *mongo.Database) []domain.PpdbRegistration {
+func (p *PpdbRegistrationRepositoyImpl) GetAll(ctx context.Context, database *mongo.Database) []domain.PpdbRegistration {
 	//TODO implement me
 	//TODO implement me
 	//var optId = [1]primitive.ObjectID{firstChoice}
